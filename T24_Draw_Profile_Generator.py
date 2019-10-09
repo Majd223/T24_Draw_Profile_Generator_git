@@ -71,14 +71,14 @@ from bokeh.plotting import figure, save, gridplot, output_file
 
 Building_Type = 'Multi' #Either 'Single' for a single family or 'Multi' for a multi-family building
 SDLM = 'No' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
-Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
-NumberBedrooms_Dwellings = [0,0] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
-SquareFootage_Dwellings = [600,600] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
+Water = 'Mixed' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
+NumberBedrooms_Dwellings = [0] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
+SquareFootage_Dwellings = [600] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
 ClimateZone = 3 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 
 #Describe the final profile format
 
-Combined = 'Yes' #Either 'Yes' or 'No'. If 'No', will print one file for each dwelling in the lists. If 'Yes', will combine the profiles for all dwellings into a single file
+Combined = 'No' #Either 'Yes' or 'No'. If 'No', will print one file for each dwelling in the lists. If 'Yes', will combine the profiles for all dwellings into a single file
 Include_Faucet = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 Include_Shower = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 Include_Clothes = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
@@ -86,7 +86,7 @@ Include_Dish = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures w
 Include_Bath = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 
 #Folder paths
-Folder = r'C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res' + os.sep #The path to the folder where you have the base files for this script stored
+Folder = r'C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\T24_Draw_Profile_Generator_git' + os.sep #The path to the folder where you have the base files for this script stored
 Folder_Output = Folder + os.sep + 'Profiles' #The output folder, where you want the draw profiles to be saved
 
 #%%-----------------CONSTANTS---------------------------
@@ -136,6 +136,7 @@ def Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant,
         
         for i in range(len(Annual_Profile)): #Perform this process for each row in Annual_Profile. Each row corresponds to a single day of the year
             Daily_Profile = Daily_Profiles[Daily_Profiles['Day'] == Annual_Profile[i]] #Create a dataframe containing only data from the current day in the annual profile
+            Daily_Profile['Mains Temperature (deg F)'] = Read_TMains(ClimateZone).loc[24 * i] #Calculate mains water temperature forthe active day, add a new column expressing it to Daily_Profile. THIS LINE CAUSES THE SCRIPT TO RUN SLOWLY, CAUSED BY REFERENCING [24 * i]. THIS .loc METHOD WAS SUPPOSED TO SOLVE THAT BUT DIDN'T. NEED TO FIND A BETTER SOLUTION.
             Daily_Profile['Start Time of Year (hr)'] = Daily_Profile['Start time (hr)'] + (24 * i) #Create a new column that states the time of year, relative to midnight on Jan 1, that this draw starts. This is needed for the Combiner function
             Daily_Profile['Day of Year (Day)'] = i + 1 #Add a new column stating the day of the year that this profile is representing
             Dwelling_Profile = Dwelling_Profile.append(Daily_Profile) #Add the data from Daily_Profiles corresponding to the current day in Annual_Profile (Represented by i) to Dwelling_Profile. This leads to Dwelling_Profile containing all draw data for that dwelling by adding the daily profiles from each day
@@ -153,6 +154,7 @@ def Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant,
             
         for i in range(len(Annual_Profile)): #For each row in Annual_Profile (Remember that each row respresents a day)
             Daily_Profile = Daily_Profiles[Daily_Profiles['Day'] == Annual_Profile[i]] #Create a dataframe containing only data from the current day in the annual profile
+            Daily_Profile['Mains Temperature (deg F)'] = Read_TMains(ClimateZone).loc[24 * i] #Calculate mains water temperature forthe active day, add a new column expressing it to Daily_Profile. THIS LINE CAUSES THE SCRIPT TO RUN SLOWLY, CAUSED BY REFERENCING [24 * i]. THIS .loc METHOD WAS SUPPOSED TO SOLVE THAT BUT DIDN'T. NEED TO FIND A BETTER SOLUTION.
             Daily_Profile['Start Time of Year (hr)'] = Daily_Profile['Start time (hr)'] + (24 * i) #Create a new column that states the time of year, relative to midnight on Jan 1, that this draw starts. This is needed for the Combiner function
             Daily_Profile['Day of Year (Day)'] = i + 1 #Add a new column stating the day of the year that this profile is representing
             Dwelling_Profile = Dwelling_Profile.append(Daily_Profile) #Append the profile for this day into the annual profile for the dwelling
