@@ -5,7 +5,7 @@ Created on Mon Aug 19 10:52:11 2019
 This script recreates the T24 hot water draw profiles for residential buildings. It aims to give the user the ability to generate draw profiles for any combination
 of the following:
     
-    -Single of multi-family buildings
+    -Single or multi-family buildings
     -Individual dwelling units (E.g. One house or one apartment) or groups of dwelling (E.g. a SF house neighborhood, or an apartment building)
     -Profiles including or excluding the Standard Distribution Loss Multiplier
     -Either the hot water profile leaving the water heater or the mixed water leaving the fixture
@@ -74,7 +74,7 @@ SDLM = 'No' #Either 'Yes' or 'No'. This flag determines whether or not the tool 
 Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
 NumberBedrooms_Dwellings = [1,2,3,4,5] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
 SquareFootage_Dwellings = [600,600,600,600,600] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
-ClimateZone = 3 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
+ClimateZone = 2 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 
 #Describe the final profile format
 
