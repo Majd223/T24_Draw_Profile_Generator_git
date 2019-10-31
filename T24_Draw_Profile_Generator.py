@@ -75,24 +75,25 @@ end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 
 #Describe the building. All lists describing the building need to be the same length for this script to work correctly
 
 Building_Type = 'Multi' #Either 'Single' for a single family or 'Multi' for a multi-family building
-SDLM = 'No' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
-Water = 'Mixed' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
-NumberBedrooms_Dwellings = [0] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
-SquareFootage_Dwellings = [600] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
+SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
+Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
+NumberBedrooms_Dwellings = [0,2,3,2,1,0] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
+SquareFootage_Dwellings = [600,1200,1400,1200,800,600] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
 ClimateZone = 3 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 
 #Describe the final profile format
 
 Combined = 'No' #Either 'Yes' or 'No'. If 'No', will print one file for each dwelling in the lists. If 'Yes', will combine the profiles for all dwellings into a single file
-Include_Faucet = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Faucet = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 Include_Shower = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 Include_Clothes = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Dish = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Dish = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 Include_Bath = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 
 #Folder paths
 Folder = r'/Users/nathanieliltis/Desktop/GitHub/T24_Draw_Profile_Generator_git' + os.sep #The path to the folder where you have the base files for this script stored
-Folder_Output = Folder + os.sep + 'DrawProfiles' + os.sep + 'Test' #The output folder, where you want the draw profiles to be saved
+Folder_Output = Folder + os.sep + 'DrawProfiles' #The output folder, where you want the draw profiles to be saved
+Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 #%%-----------------CONSTANTS---------------------------
 
@@ -103,7 +104,7 @@ Temperature_Bath = 105 #deg F
 Temperature_Supply_WaterHeater = 115 #deg F
 
 #%%-----------------LOAD WEATHER DATA---------------------------
-Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
+#gather the climate zone's weaher data and create T_Mains - which only includes one temperature for each day of the year (is 365 long)
 start_text = 'CTZ0' if len(str(ClimateZone)) == 1 else 'CTZ'  #Identifying the correct file is done differently if the climate zone number is less than 10
 File_WeatherData = os.sep + start_text + str(ClimateZone) + 'S13b.CSW' #Create a string stating the location of the weather file. Note the 0 following CTZ in climate zones < 10
 Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
@@ -113,7 +114,9 @@ WeatherData = pd.read_csv(Path_WeatherData, header = 26) #Read the weather data,
 First_Hour = WeatherData[WeatherData["Hour"] == 1]
 First_Hour = First_Hour.set_index([pd.Index(range(365))])
 T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
+
 #%%-----------------------------ERROR CHECKING-------------------------------
+
 #If the user has entered a Building_Type that does not exist
 if Building_Type != 'Single' and Building_Type != 'Multi':
     print('Building_Type must be either "Single" or "Multi"') #Return an error
@@ -258,7 +261,7 @@ def Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwelling, Water): #This 
 
     return Dwelling_Profile #Return the modified Dwelling_Profile
 
-def Calculate_Fraction_HotWater(Temperature_Set, Data):
+def Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data):
 
 #This function estimates the fraction of hot water at various fixtures using the assumptions in the 2016 version of CBECC. Page B-3
 
@@ -274,9 +277,9 @@ def Calculate_Fraction_HotWater(Temperature_Set, Data):
     Data['BooleanMask'] = Data['Fixture'] == 'DWSH' #Repeates the same process for the dishwasher
     Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * Fraction_HotWater_DishWasher
     Data['BooleanMask'] = Data['Fixture'] == 'BATH'
-    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Bath - Data['Mains Temperature (deg F)']) / (Temperature_Set  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a bath based on the CBECC-Res assumed temperature for baths and the mains water temperature
+    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Bath - Data['Mains Temperature (deg F)']) / (Temperature_Supply_WaterHeater  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a bath based on the CBECC-Res assumed temperature for baths and the mains water temperature
     Data['BooleanMask'] = Data['Fixture'] == 'SHWR'
-    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Shower - Data['Mains Temperature (deg F)']) / (Temperature_Set  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a shower based on the CBECC-Res assumed temperature for showers and the mains water temperature
+    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Shower - Data['Mains Temperature (deg F)']) / (Temperature_Supply_WaterHeater  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a shower based on the CBECC-Res assumed temperature for showers and the mains water temperature
 
     del Data['BooleanMask'] #Delete the BoolenaMask column because it adds no value beyond this function
 
@@ -510,10 +513,10 @@ for i in range(len(NumberBedrooms_Dwellings)): #For each entry in the list Numbe
             os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)
 
         if Building_Type == 'Multi': #If it's a multi-family building
-            Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Building=' + Building_Type + '_Water=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Included=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+            Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Building=' + Building_Type + '_Climate=' + str(ClimateZone) + '_Water=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Included=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
         elif Building_Type == 'Single': #If it's a single family building
-            Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Building=' + Building_Type + '_Water=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings[i]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Included=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+            Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Building=' + Building_Type + '_Climate=' + str(ClimateZone) + '_Water=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings[i]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Included=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
     elif Combined == 'Yes': #If the user wants the draw profiles to be combined then execute this code
             Profiles.append(Dwelling_Profile) #Add the draw profile to the list of draw profiles that we need to combine
@@ -527,7 +530,7 @@ if Combined == 'Yes': #If the user wants the draw profiles to be combined into o
     if not os.path.exists(Folder_Output + os.sep + Building_Type + os.sep + Water):
         os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)
 
-    Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Building=' + Building_Type + '_Water=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Included=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+    Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Building=' + Building_Type + '_Climate=' + str(ClimateZone) + '_Water=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Included=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
     p1 = figure(width=1200, height=600, x_axis_label='Time (hr)', y_axis_label = 'Volume (gal)')
     p1.line(Dwelling_Profile['Start Time of Year (hr)'], Dwelling_Profile['Volume (gal)'].cumsum(), legend='Dwelling_Profile', color = 'red')
@@ -535,7 +538,7 @@ if Combined == 'Yes': #If the user wants the draw profiles to be combined into o
     p1.legend.location = 'top_left'
 
     p = gridplot([[p1]])
-    output_file(Folder_Output + '\Debugging.html', title = 'Volumes')
+    output_file(Folder_Output + os.sep + 'Debugging.html', title = 'Volumes')
     save(p)
 
 end_time = time.time()
