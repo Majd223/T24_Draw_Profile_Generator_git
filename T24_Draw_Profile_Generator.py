@@ -104,14 +104,15 @@ Temperature_Supply_WaterHeater = 115 #deg F
 
 #%%-----------------LOAD WEATHER DATA---------------------------
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
-start_text = 'CTZ0' if len(str(ClimateZone)) == 1 else start_text = 'CTZ'  #Identifying the correct file is done differently if the climate zone number is less than 10
+start_text = 'CTZ0' if len(str(ClimateZone)) == 1 else 'CTZ'  #Identifying the correct file is done differently if the climate zone number is less than 10
 File_WeatherData = os.sep + start_text + str(ClimateZone) + 'S13b.CSW' #Create a string stating the location of the weather file. Note the 0 following CTZ in climate zones < 10
 Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
 
-First_Hour = WeatherData[WeatherData["Hour"] == 1] #filter data so it only includes the first hour of each day
-T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
-T_Mains = T_Mains.set_index([pd.Index(range(365))]) #make the index correlate with the day of the year - 1 (zero-based), for reference later
+WeatherData = pd.read_csv(Path_WeatherData, header = 26) #Read the weather data, ignoring the first 25 lines of header
 
+First_Hour = WeatherData[WeatherData["Hour"] == 1]
+First_Hour = First_Hour.set_index([pd.Index(range(365))])
+T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
 #%%-----------------------------ERROR CHECKING-------------------------------
 #If the user has entered a Building_Type that does not exist
 if Building_Type != 'Single' and Building_Type != 'Multi':
