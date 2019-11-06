@@ -91,7 +91,7 @@ Include_Dish = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures 
 Include_Bath = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 
 #Folder paths
-Folder = r'/Users/nathanieliltis/Desktop/GitHub/T24_Draw_Profile_Generator_git' + os.sep #The path to the folder where you have the base files for this script stored
+Folder = os.path.dirname(__file__) + os.sep #The path to the folder where you have the base files for this script stored
 Folder_Output = Folder + os.sep + 'DrawProfiles' #The output folder, where you want the draw profiles to be saved
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
