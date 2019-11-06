@@ -74,7 +74,7 @@ end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 
 #Describe the building. All lists describing the building need to be the same length for this script to work correctly
 
 Building_Type = 'Single' #Either 'Single' for a single family or 'Multi' for a multi-family building
-SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
+SDLM = 'No' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
 Water = 'Mixed' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
 NumberBedrooms_Dwellings = [1] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
 SquareFootage_Dwellings = [750] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
@@ -111,8 +111,8 @@ Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and Fil
 
 WeatherData = pd.read_csv(Path_WeatherData, header = 26) #Read the weather data, ignoring the first 25 lines of header
 
-First_Hour = WeatherData[WeatherData["Hour"] == 1]
-First_Hour = First_Hour.set_index([pd.Index(range(365))])
+First_Hour = WeatherData[WeatherData["Hour"] == 1] #Creates a data frame containing only data from the first hour of each day in the weather file
+First_Hour = First_Hour.set_index([pd.Index(range(365))]) #Sets the index of First_Hour to be the number of days in the year/number of entries in First_Hour
 T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
 
 #%%-----------------------------ERROR CHECKING-------------------------------
