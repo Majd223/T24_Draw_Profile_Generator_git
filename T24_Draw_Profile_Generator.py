@@ -73,8 +73,8 @@ end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 
 
 #Describe the building. All lists describing the building need to be the same length for this script to work correctly
 
-Building_Type = 'Multi' #Either 'Single' for a single family or 'Multi' for a multi-family building
-SDLM = 'No' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
+Building_Type = 'Single' #Either 'Single' for a single family or 'Multi' for a multi-family building
+SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
 Water = 'Mixed' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
 NumberBedrooms_Dwellings = [1] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
 SquareFootage_Dwellings = [750] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
@@ -182,10 +182,10 @@ def Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant,
         Dwelling_Profile = Dwelling_Profile.reset_index() #After appending the index will be messed up. These two lines fix that
         del Dwelling_Profile['index']
 
-        if Include_Faucet == 'No' or Include_Shower == 'No' or Include_Clothes == 'No' or Include_Dish == 'No' or Include_Bath == 'No': #Unless the user said they do not want to filter draws by fixture
-            Dwelling_Profile, Included_Code = Filter_DataSet_ByFixture(Dwelling_Profile, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath) #Call the Filter_DataSet_ByFixture function to limit the resulting profile to only contain draws that match the specified filter
-        else: #If everything is included
-            Included_Code = ['F','S','C','D','B'] #Use Included_Code to show that all are included, don't filter data set
+    if Include_Faucet == 'No' or Include_Shower == 'No' or Include_Clothes == 'No' or Include_Dish == 'No' or Include_Bath == 'No': #Unless the user said they do not want to filter draws by fixture
+        Dwelling_Profile, Included_Code = Filter_DataSet_ByFixture(Dwelling_Profile, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath) #Call the Filter_DataSet_ByFixture function to limit the resulting profile to only contain draws that match the specified filter
+    else: #If everything is included
+        Included_Code = ['F','S','C','D','B'] #Use Included_Code to show that all are included, don't filter data set
 
     Dwelling_Profile = Dwelling_Profile.sort_values(['Start Time of Year (hr)']) #Sorts the draws in chronological order
 
