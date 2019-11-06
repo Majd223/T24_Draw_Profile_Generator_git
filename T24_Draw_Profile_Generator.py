@@ -128,7 +128,7 @@ if Building_Type == 'Single' and min(NumberBedrooms_Dwellings) < 1 or max(Number
     sys.exit() #And exit the program
 
 if SDLM != 'Yes' and SDLM != 'No':
-    print("SDLM must be either 'Yes' or 'No' #Return an error
+    print("SDLM must be either 'Yes' or 'No'") #Return an error
     sys.exit() #And exit the program
 
 if len(NumberBedrooms_Dwellings) != len(SquareFootage_Dwellings): #If the lists for number of bedrooms in each dwelling and square footage of each dwelling don't match
