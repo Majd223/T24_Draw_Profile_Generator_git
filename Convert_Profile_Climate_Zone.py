@@ -18,7 +18,11 @@ start_time = time.time() # mark the beginning of the execution time for referenc
 #%%------------------------------INPUTS--------------------------------------
 #Folder paths - assumes the profile has been created and is in the appropriate folder
 #file to convert to a new climate zone:
+<<<<<<< HEAD
 Folder = r'/Users/nathanieliltis/Desktop/GitHub/T24_Draw_Profile_Generator_git' + os.sep #The path to the folder where you have the base files for this script stored
+=======
+Folder = os.path.dirname(__file__) + os.sep #The path to the folder where you have the base files for this script stored
+>>>>>>> 6ffe2685747812f6aa0db0b5d2761b239f56bdfe
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 New_Climate_Zone = 3
