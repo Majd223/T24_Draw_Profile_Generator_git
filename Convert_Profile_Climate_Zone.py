@@ -32,7 +32,7 @@ Folder = os.path.dirname(__file__) #The path to the folder this script is in
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
-New_Climate_Zones = [9] #specify which climate zones to convert the file to - can be a number from 1-16
+New_Climate_Zones = [9,10,16] #specify which climate zones to convert the file to - can be a number from 1-16
 #file to convert to a new climate zone:
 File = "Building=Multi_Climate=3_Water=Hot_Profile=4a_SDLM=Yes_CFA=600_Included=['F', 'S', 'D'].csv" # mjust use double-quotations since string has singles already
 Split_Up = File.replace(".csv","").split(sep = '_')
