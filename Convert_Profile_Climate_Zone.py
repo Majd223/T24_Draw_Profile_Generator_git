@@ -28,7 +28,9 @@ import time
 start_time = time.time() # mark the beginning of the execution time for reference back to later
 #%%------------------------------INPUTS--------------------------------------
 #Folder paths - assumes the profile has been created and is in the appropriate folder
+#file to convert to a new climate zone:
 Folder = os.path.dirname(__file__) #The path to the folder this script is in
+
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
