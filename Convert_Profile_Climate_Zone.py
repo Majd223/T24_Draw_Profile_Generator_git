@@ -34,17 +34,15 @@ Folder = os.path.dirname(__file__) #The path to the folder this script is in
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
-New_Climate_Zones = [9,10,16] #specify which climate zones to convert the file to - can be a number from 1-16
+New_Climate_Zones = [9] #specify which climate zones to convert the file to - can be a number from 1-16
 #file to convert to a new climate zone:
-File = "Building=Multi_Climate=3_Water=Hot_Profile=4a_SDLM=Yes_CFA=600_Included=['F', 'S', 'D'].csv" # mjust use double-quotations since string has singles already
+File = "HighRise_FullBuilding_Hot_CZ=3_SDLM=Yes_Inc=[S]" # mjust use double-quotations since string has singles already
 Split_Up = File.replace(".csv","").split(sep = '_')
 Specifier_Dict = {each.split(sep = "=")[0] : each.split(sep = "=")[1] for each in Split_Up}
 
-Building_Type = Specifier_Dict['Building'] #Either 'Single' for a single family or 'Multi' for a multi-family building
-SDLM = Specifier_Dict['SDLM'] #Either 'Yes' or 'No'. This flag determines whether or not the tool has added SDLM into the water flow calculations
-Water = Specifier_Dict['Water'] #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
-Conditioned_Area = Specifier_Dict['CFA']
-ClimateZone = Specifier_Dict['Climate']
+ClimateZone = Specifier_Dict['CZ'] if 'CZ' in Specifier_Dict else:
+    print("Climate Zone not properly specified in source file - use 'CZ=[...]'") #Return an error
+    sys.exit() #And exit the program
 
 File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + Building_Type + os.sep + Water + os.sep + File
 Folder_Output = File_Location
@@ -131,7 +129,7 @@ for each in Zones_Dict: #repeat for each new zone required
     #reorder
     Data = Data[proper_order]
 
-    Output_File_Name = File.replace("Climate={}".format(ClimateZone),"Climate={}".format(each))
+    Output_File_Name = File.replace("CZ={}".format(ClimateZone),"CZ={}".format(each))
     Data.to_csv(Folder_Output.replace(File, Output_File_Name), index = False)
 
 print("time to run = {}".format(time.time() - start_time))
