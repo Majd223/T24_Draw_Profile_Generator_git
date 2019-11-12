@@ -16,14 +16,43 @@ It is also completely acceptable to change the defined water temperatures in the
 %##---CONSTANTS--- section; The script recalculates all of the numbers that are based
 on these.
 
+Timing insights ( Nathan's Computer - one profile, approx 27000 rows long):
+Total time - 1.4 sec.
+importing one weather file - 37 ms (3%)
+all work on weather file including importing the file - 40 ms (3%)
+deleting unneeded columns in dataframe - 2 ms (0%)
+inputting the new climate data (27000 rows) - 600 ms (vs approx 800 ms with swifter) (42%-55%)
+other final datframe manipulations to get back to the original format - 27 ms (3%)
+print the final dataframe to csv -  470 ms (33%)
+
+Timing insights ( Nathan's Computer - one profile, approx 800 rows long):
+Total time - 0.09 sec.
+importing one weather file - 37 ms
+all work on weather file including importing the file - 40 ms
+deleting unneeded columns in dataframe - 2 ms
+inputting the new climate data (27000 rows) - 19 ms
+other final datframe manipulations to get back to the original format - 27 ms
+print the final dataframe to csv -  20 ms
+
+Timing insights (Nathan's Computer - convert to all climate zones, approx 27000 rows long):
+total time - 17 sec. with swifter, 21 sec. without swifter
+each weather data swap with swifter - 900 ms
+each weather data swap without swifter - 600 ms
+
+Timing insights (Nathan's Computer - convert to all climate zones, approx 800 rows long):
+total time - 17 sec. with swifter, 21 sec. without swifter
+each weather data swap with swifter - 900 ms
+each weather data swap without swifter - 600 ms
+
 @author: Nathan Iltis
 """
-
 #%%-------------------------------IMPORT STATEMENTS--------------------------
 import pandas as pd
 import sys
 import os
 import time
+import swifter
+from linetimer import CodeTimer
 #%%------------------------------TIMER--------------------------------------
 start_time = time.time() # mark the beginning of the execution time for reference back to later
 #%%------------------------------INPUTS--------------------------------------
@@ -34,21 +63,25 @@ Folder = os.path.dirname(__file__) #The path to the folder this script is in
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
-New_Climate_Zones = [9] #specify which climate zones to convert the file to - can be a number from 1-16
+New_Climate_Zones = list(range(1,17)) #specify which climate zones to convert the file to - can be a number from 1-16
 #file to convert to a new climate zone:
-File = "HighRise_FullBuilding_Hot_CZ=3_SDLM=Yes_Inc=[S]" # mjust use double-quotations since string has singles already
+File = "Bldg=Single_CZ=1_Wat=Hot_Prof=3_Inc=['S', 'B'].csv" # mjust use double-quotations since string has singles already
 Split_Up = File.replace(".csv","").split(sep = '_')
 Specifier_Dict = {each.split(sep = "=")[0] : each.split(sep = "=")[1] for each in Split_Up}
 
-ClimateZone = Specifier_Dict['CZ'] if 'CZ' in Specifier_Dict else:
+if 'CZ' in Specifier_Dict:
+    ClimateZone = Specifier_Dict['CZ']
+else:
     print("Climate Zone not properly specified in source file - use 'CZ=[...]'") #Return an error
     sys.exit() #And exit the program
+Building_Type = Specifier_Dict['Bldg'] #get building type to locate file
+Water = Specifier_Dict['Wat']
 
 File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + Building_Type + os.sep + Water + os.sep + File
 Folder_Output = File_Location
 #%%-----------------------------ERROR CHECKING-------------------------------
 #If the user has tried to convert a mixed water profile
-if Water != 'Hot':
+if Water != 'Hot': #must be a hot water draw profile
     print("Must be a Hot water draw profile, this is mixed so the climate doesn't matter") #Return an error
     sys.exit() #And exit the program
 if len(set(Possible_Climate_Zones) & set(New_Climate_Zones)) == 0:
@@ -100,36 +133,45 @@ def Calculate_FlowWater_Hot(DrawProfile):
 #%%-----------------LOAD WEATHER DATA---------------------------
 #gather the climate zone's weaher data and create T_Mains - which only includes one temperature for each day of the year (is 365 long)
 #do this for every requested climate zone
-Zones_Dict = {} #dictionary to store the T_mains data by climate zone
-for each in New_Climate_Zones:
-    start_text = 'CTZ0' if len(str(each)) == 1 else 'CTZ'  #Identifying the correct file is done differently if the climate zone number is less than 10
-    File_WeatherData = os.sep + start_text + str(each) + 'S13b.CSW' #Create a string stating the location of the weather file. Note the 0 following CTZ in climate zones < 10
-    Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
+with CodeTimer('all weather data work'):
+    Zones_Dict = {} #dictionary to store the T_mains data by climate zone
+    for each in New_Climate_Zones:
+        start_text = 'CTZ0' if len(str(each)) == 1 else 'CTZ'  #Identifying the correct file is done differently if the climate zone number is less than 10
+        File_WeatherData = os.sep + start_text + str(each) + 'S13b.CSW' #Create a string stating the location of the weather file. Note the 0 following CTZ in climate zones < 10
+        Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
+        with CodeTimer('import csv weather data'):
+            WeatherData = pd.read_csv(Path_WeatherData, header = 26, usecols = ['Hour','T Ground','31-day Avg lag DB']) #Read the weather data, ignoring the first 25 lines of header
 
-    WeatherData = pd.read_csv(Path_WeatherData, header = 26) #Read the weather data, ignoring the first 25 lines of header
-
-    First_Hour = WeatherData[WeatherData["Hour"] == 1] #filter data to only include the fist hour of every day
-    First_Hour = First_Hour.set_index([pd.Index(range(365))]) #set index as zero-based day of year
-    T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
-    Zones_Dict[each] = T_Mains
+        First_Hour = WeatherData[WeatherData["Hour"] == 1] #filter data to only include the fist hour of every day
+        First_Hour = First_Hour.set_index([pd.Index(range(365))]) #set index as zero-based day of year
+        T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
+        Zones_Dict[each] = T_Mains
 #%%---------------------------GENERATE AND SAVE REQUESTED DRAW PROFILES---------
 Data = pd.read_csv(File_Location) #Read the file to be converted
 proper_order = Data.columns.to_list() #reference correct column order
-for each in Zones_Dict: #repeat for each new zone required
-    del Data['Fraction Hot Water'] #we are going to recalculate this column
-    del Data['Hot Water Volume (gal)'] #we are going to recalculate this column
-    del Data['Hot Water Flow Rate (gpm)'] #we are going to recalculate this column
-    del Data['Mains Temperature (deg F)'] #we are going to recalculate this column
+for each in New_Climate_Zones: #repeat for each new zone required
+    with CodeTimer('deleting data from previous'):
+        del Data['Fraction Hot Water'] #we are going to recalculate this column
+        del Data['Hot Water Volume (gal)'] #we are going to recalculate this column
+        del Data['Hot Water Flow Rate (gpm)'] #we are going to recalculate this column
+        del Data['Mains Temperature (deg F)'] #we are going to recalculate this column
 
     Zone_T_Mains = Zones_Dict[each] #get T_Mains Temperature data from previously created dictionary
-    Data['Mains Temperature (deg F)'] = Data.apply(lambda x: T_Mains[x['Day of Year (Day)']-1], axis = 1)
+    if len(Data) > 40000: #use swifter module to speed up coed if it's a long file
+        with CodeTimer('swap climate data (swifter)'):
+            Data['Mains Temperature (deg F)'] = Data.swifter.apply(lambda x: Zone_T_Mains[x['Day of Year (Day)']-1], axis = 1)
+    else: #do not use swifter module to speed up code if it's a short file
+        with CodeTimer('swap climate data (vanilla .apply)'):
+            Data['Mains Temperature (deg F)'] = Data.apply(lambda x: Zone_T_Mains[x['Day of Year (Day)']-1], axis = 1)
     #recalculate the fileds that were caluclated using the ground temperature (T_Mains):
-    Data = Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data) #Calculate the fraction of hot water for each draw in the draw profile
-    Data = Calculate_FlowWater_Hot(Data) #Calculate the flow of hot water for each draw in the draw profile
-    #reorder
-    Data = Data[proper_order]
+    with CodeTimer('manipulate weather dataframe'):
+        Data = Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data) #Calculate the fraction of hot water for each draw in the draw profile
+        Data = Calculate_FlowWater_Hot(Data) #Calculate the flow of hot water for each draw in the draw profile
+        #reorder
+        Data = Data[proper_order]
 
     Output_File_Name = File.replace("CZ={}".format(ClimateZone),"CZ={}".format(each))
-    Data.to_csv(Folder_Output.replace(File, Output_File_Name), index = False)
+    with CodeTimer('csv data to file'):
+        Data.to_csv(Folder_Output.replace(File, Output_File_Name), index = False)
 
 print("time to run = {}".format(time.time() - start_time))
