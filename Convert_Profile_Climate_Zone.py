@@ -157,7 +157,7 @@ for each in New_Climate_Zones: #repeat for each new zone required
         del Data['Mains Temperature (deg F)'] #we are going to recalculate this column
 
     Zone_T_Mains = Zones_Dict[each] #get T_Mains Temperature data from previously created dictionary
-    if len(Data) > 40000: #use swifter module to speed up coed if it's a long file
+    if len(Data) > 40000: #use swifter module to speed up coed if it's a long file, because swifter actually slows it down if it's below this threshold
         with CodeTimer('swap climate data (swifter)'):
             Data['Mains Temperature (deg F)'] = Data.swifter.apply(lambda x: Zone_T_Mains[x['Day of Year (Day)']-1], axis = 1)
     else: #do not use swifter module to speed up code if it's a short file
