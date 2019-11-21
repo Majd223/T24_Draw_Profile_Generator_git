@@ -65,7 +65,6 @@ import os
 import time
 from bokeh.plotting import figure, save, gridplot, output_file
 
-
 #%%------------------------------TIMER--------------------------------------
 start_time = time.time() # mark the beginning of the execution time for reference back to later
 end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 0, 0, 0
@@ -74,21 +73,21 @@ end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 
 #Describe the building. All lists describing the building need to be the same length for this script to work correctly
 
 Building_Type = 'Single' #Either 'Single' for a single family or 'Multi' for a multi-family building
-SDLM = 'No' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
-Water = 'Mixed' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
-NumberBedrooms_Dwellings = [1] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
-SquareFootage_Dwellings = [750] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
-ClimateZone = 3 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
+SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
+Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
+NumberBedrooms_Dwellings = [1, 2, 3, 4, 5] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
+SquareFootage_Dwellings = [800, 1200, 2100, 2700, 3500] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
+ClimateZone = 1 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 
 #Describe the final profile format
 
 Combined = 'No' #Either 'Yes' or 'No'. If 'No', will print one file for each dwelling in the lists. If 'Yes', will combine the profiles for all dwellings into a single file
 Combined_LargeBuilding = 'No' #Either 'Yes' or 'No'. The script for combining profiles can be slow, take a long time to run. This function provides a less precise, faster version
 Include_Faucet = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Shower = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Clothes = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Shower = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Clothes = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 Include_Dish = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Bath = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Bath = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 
 #Folder paths
 Folder = os.path.dirname(__file__) + os.sep #The path to the folder where you have the base files for this script stored
@@ -109,10 +108,11 @@ start_text = 'CTZ0' if len(str(ClimateZone)) == 1 else 'CTZ'  #Identifying the c
 File_WeatherData = os.sep + start_text + str(ClimateZone) + 'S13b.CSW' #Create a string stating the location of the weather file. Note the 0 following CTZ in climate zones < 10
 Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
 
-WeatherData = pd.read_csv(Path_WeatherData, header = 26) #Read the weather data, ignoring the first 25 lines of header
+WeatherData = pd.read_csv(Path_WeatherData, header = 26) #Read the weather data, ignoring the first 26 lines of header
 
 First_Hour = WeatherData[WeatherData["Hour"] == 1] #Creates a data frame containing only data from the first hour of each day in the weather file
 First_Hour = First_Hour.set_index([pd.Index(range(365))]) #Sets the index of First_Hour to be the number of days in the year/number of entries in First_Hour
+
 T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
 
 #%%-----------------------------ERROR CHECKING-------------------------------

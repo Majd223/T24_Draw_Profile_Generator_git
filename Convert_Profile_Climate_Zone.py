@@ -28,30 +28,22 @@ import time
 start_time = time.time() # mark the beginning of the execution time for reference back to later
 #%%------------------------------INPUTS--------------------------------------
 #Folder paths - assumes the profile has been created and is in the appropriate folder
-<<<<<<< HEAD
 #file to convert to a new climate zone:
-<<<<<<< HEAD
-Folder = r'/Users/nathanieliltis/Desktop/GitHub/T24_Draw_Profile_Generator_git' + os.sep #The path to the folder where you have the base files for this script stored
-=======
 Folder = os.path.dirname(__file__) + os.sep #The path to the folder where you have the base files for this script stored
->>>>>>> 6ffe2685747812f6aa0db0b5d2761b239f56bdfe
-=======
-Folder = os.path.dirname(__file__) #The path to the folder this script is in
->>>>>>> 7eed1d54ea12039c556cc4cee4583b14198c46f2
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
-New_Climate_Zones = [9] #specify which climate zones to convert the file to - can be a number from 1-16
+New_Climate_Zones = list(range(2,17)) #specify which climate zones to convert the file to - can be a number from 1-16
 #file to convert to a new climate zone:
-File = "Building=Multi_Climate=3_Water=Hot_Profile=4a_SDLM=Yes_CFA=600_Included=['F', 'S', 'D'].csv" # mjust use double-quotations since string has singles already
+File = "Bldg=Single_CZ=1_Wat=Hot_Prof=5_SDLM=Yes_CFA=3500_Inc=['F', 'S', 'C', 'D', 'B'].csv" # mjust use double-quotations since string has singles already
 Split_Up = File.replace(".csv","").split(sep = '_')
 Specifier_Dict = {each.split(sep = "=")[0] : each.split(sep = "=")[1] for each in Split_Up}
 
-Building_Type = Specifier_Dict['Building'] #Either 'Single' for a single family or 'Multi' for a multi-family building
+Building_Type = Specifier_Dict['Bldg'] #Either 'Single' for a single family or 'Multi' for a multi-family building
 SDLM = Specifier_Dict['SDLM'] #Either 'Yes' or 'No'. This flag determines whether or not the tool has added SDLM into the water flow calculations
-Water = Specifier_Dict['Water'] #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
+Water = Specifier_Dict['Wat'] #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
 Conditioned_Area = Specifier_Dict['CFA']
-ClimateZone = Specifier_Dict['Climate']
+ClimateZone = Specifier_Dict['CZ']
 
 File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + Building_Type + os.sep + Water + os.sep + File
 Folder_Output = File_Location
@@ -114,11 +106,12 @@ for each in New_Climate_Zones:
     start_text = 'CTZ0' if len(str(each)) == 1 else 'CTZ'  #Identifying the correct file is done differently if the climate zone number is less than 10
     File_WeatherData = os.sep + start_text + str(each) + 'S13b.CSW' #Create a string stating the location of the weather file. Note the 0 following CTZ in climate zones < 10
     Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
-
+    
     WeatherData = pd.read_csv(Path_WeatherData, header = 26) #Read the weather data, ignoring the first 25 lines of header
 
     First_Hour = WeatherData[WeatherData["Hour"] == 1] #filter data to only include the fist hour of every day
     First_Hour = First_Hour.set_index([pd.Index(range(365))]) #set index as zero-based day of year
+    
     T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
     Zones_Dict[each] = T_Mains
 #%%---------------------------GENERATE AND SAVE REQUESTED DRAW PROFILES---------
@@ -138,7 +131,7 @@ for each in Zones_Dict: #repeat for each new zone required
     #reorder
     Data = Data[proper_order]
 
-    Output_File_Name = File.replace("Climate={}".format(ClimateZone),"Climate={}".format(each))
+    Output_File_Name = File.replace("CZ={}".format(ClimateZone),"CZ={}".format(each))
     Data.to_csv(Folder_Output.replace(File, Output_File_Name), index = False)
 
 print("time to run = {}".format(time.time() - start_time))
