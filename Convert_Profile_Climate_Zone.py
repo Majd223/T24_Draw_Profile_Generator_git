@@ -131,47 +131,46 @@ def Calculate_FlowWater_Hot(DrawProfile):
 #gather the climate zone's weaher data and create T_Mains - which only includes one temperature for each day of the year (is 365 long)
 #do this for every requested climate zone
 
-with CodeTimer('all weather data work'):
-    Zones_Dict = {} #dictionary to store the T_mains data by climate zone
-    for each in New_Climate_Zones:
-        start_text = 'CTZ0' if len(str(each)) == 1 else 'CTZ'  #Identifying the correct file is done differently if the climate zone number is less than 10
-        File_WeatherData = os.sep + start_text + str(each) + 'S13b.CSW' #Create a string stating the location of the weather file. Note the 0 following CTZ in climate zones < 10
-        Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
-        with CodeTimer('import csv weather data'):
-            WeatherData = pd.read_csv(Path_WeatherData, header = 26, usecols = ['Hour','T Ground','31-day Avg lag DB']) #Read the weather data, ignoring the first 25 lines of header
+# with CodeTimer('all weather data work'): #for testing
+Zones_Dict = {} #dictionary to store the T_mains data by climate zone
+for each in New_Climate_Zones:
+    start_text = 'CTZ0' if len(str(each)) == 1 else 'CTZ'  #Identifying the correct file is done differently if the climate zone number is less than 10
+    File_WeatherData = os.sep + start_text + str(each) + 'S13b.CSW' #Create a string stating the location of the weather file. Note the 0 following CTZ in climate zones < 10
+    Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
+    WeatherData = pd.read_csv(Path_WeatherData, header = 26, usecols = ['Hour','T Ground','31-day Avg lag DB']) #Read the weather data, ignoring the first 25 lines of header
 
-        First_Hour = WeatherData[WeatherData["Hour"] == 1] #filter data to only include the fist hour of every day
-        First_Hour = First_Hour.set_index([pd.Index(range(365))]) #set index as zero-based day of year
-        T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
-        Zones_Dict[each] = T_Mains
+    First_Hour = WeatherData[WeatherData["Hour"] == 1] #filter data to only include the fist hour of every day
+    First_Hour = First_Hour.set_index([pd.Index(range(365))]) #set index as zero-based day of year
+    T_Mains = 0.65 * First_Hour['T Ground'] + 0.35 * First_Hour['31-day Avg lag DB'] #Equation 10, ACM, Appendix B. Returns the mains water temperature as a function of the ground temper
+    Zones_Dict[each] = T_Mains
 
 #%%---------------------------GENERATE AND SAVE REQUESTED DRAW PROFILES---------
 Data = pd.read_csv(File_Location) #Read the file to be converted
 proper_order = Data.columns.to_list() #reference correct column order
 for each in New_Climate_Zones: #repeat for each new zone required
-    with CodeTimer('deleting data from previous'):
+    with CodeTimer('converting to climate zone {0} complete, it'.format(each)):
         del Data['Fraction Hot Water'] #we are going to recalculate this column
         del Data['Hot Water Volume (gal)'] #we are going to recalculate this column
         del Data['Hot Water Flow Rate (gpm)'] #we are going to recalculate this column
         del Data['Mains Temperature (deg F)'] #we are going to recalculate this column
 
-    Zone_T_Mains = Zones_Dict[each] #get T_Mains Temperature data from previously created dictionary
-    if len(Data) > 40000: #use swifter module to speed up coed if it's a long file, because swifter actually slows it down if it's below this threshold
-        with CodeTimer('swap climate data (swifter)'):
+        Zone_T_Mains = Zones_Dict[each] #get T_Mains Temperature data from previously created dictionary
+        if len(Data) > 40000: #use swifter module to speed up coed if it's a long file, because swifter actually slows it down if it's below this threshold
+            # with CodeTimer('swap climate data (swifter)'): #for testing
             Data['Mains Temperature (deg F)'] = Data.swifter.apply(lambda x: Zone_T_Mains[x['Day of Year (Day)']-1], axis = 1)
-    else: #do not use swifter module to speed up code if it's a short file
-        with CodeTimer('swap climate data (vanilla .apply)'):
+        else: #do not use swifter module to speed up code if it's a short file
+            # with CodeTimer('swap climate data (vanilla .apply)'): #for testing
             Data['Mains Temperature (deg F)'] = Data.apply(lambda x: Zone_T_Mains[x['Day of Year (Day)']-1], axis = 1)
-    #recalculate the fileds that were caluclated using the ground temperature (T_Mains):
+        #recalculate the fileds that were caluclated using the ground temperature (T_Mains):
 
-    with CodeTimer('manipulate weather dataframe'):
+        # with CodeTimer('manipulate weather dataframe'):  #for testing
         Data = Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data) #Calculate the fraction of hot water for each draw in the draw profile
         Data = Calculate_FlowWater_Hot(Data) #Calculate the flow of hot water for each draw in the draw profile
         #reorder
         Data = Data[proper_order]
 
-    Output_File_Name = File.replace("CZ={}".format(ClimateZone),"CZ={}".format(each))
-    with CodeTimer('csv data to file'):
+        Output_File_Name = File.replace("CZ={}".format(ClimateZone),"CZ={}".format(each))
+        # with CodeTimer('csv data to file'): #for testing
         Data.to_csv(Folder_Output.replace(File, Output_File_Name), index = False)
 
 print("time to run = {}".format(time.time() - start_time))
