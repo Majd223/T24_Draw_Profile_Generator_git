@@ -65,9 +65,9 @@ Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder th
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
 New_Climate_Zones = list(range(1,17)) #specify which climate zones to convert the file to - can be a number from 1-16
 #file to convert to a new climate zone:
-File = "Bldg=Single_CZ=1_Wat=Hot_Prof=3_Inc=['S', 'B'].csv" # mjust use double-quotations since string has singles already
-Split_Up = File.replace(".csv","").split(sep = '_')
-Specifier_Dict = {each.split(sep = "=")[0] : each.split(sep = "=")[1] for each in Split_Up}
+File = "Bldg=Single_CZ=1_Wat=Hot_Prof=3_Inc=['S', 'B'].csv" # must use double-quotations since string has singles already
+Split_Up = File.replace(".csv","").split(sep = '_') # split up file name into a list according to the _ character
+Specifier_Dict = {each.split(sep = "=")[0] : each.split(sep = "=")[1] for each in Split_Up} #split up file name again using the equals sign and create a dictionary giving the values for the various descriptors in the filename
 
 if 'CZ' in Specifier_Dict:
     ClimateZone = Specifier_Dict['CZ']

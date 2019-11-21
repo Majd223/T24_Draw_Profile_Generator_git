@@ -78,7 +78,7 @@ SDLM = 'No' #Either 'Yes' or 'No'. This flag determines whether or not the tool 
 Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
 NumberBedrooms_Dwellings = [3] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
 SquareFootage_Dwellings = [1000] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
-ClimateZone = 5 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
+ClimateZone = 1 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 
 #Describe the final profile format
 
