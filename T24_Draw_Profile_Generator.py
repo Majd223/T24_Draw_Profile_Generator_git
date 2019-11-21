@@ -3,7 +3,7 @@
 Created on Mon Aug 19 10:52:11 2019
 
 This script recreates the T24 hot water draw profiles for residential buildings. It aims to give the user the ability to generate draw profiles for any combination
-of the following:   
+of the following:
     -Single or multi-family buildings
     -Individual dwelling units (E.g. One house or one apartment) or groups of dwelling (E.g. a SF house neighborhood, or an apartment building)
     -Profiles including or excluding the Standard Distribution Loss Multiplier
@@ -109,6 +109,7 @@ File_WeatherData = os.sep + start_text + str(ClimateZone) + 'S13b.CSW' #Create a
 Path_WeatherData = Folder_WeatherData + File_WeatherData #Combine Folder and File to create a path stating the location of the weather data
 
 WeatherData = pd.read_csv(Path_WeatherData, header = 26) #Read the weather data, ignoring the first 26 lines of header
+WeatherData = pd.read_csv(Path_WeatherData, header = 26, usecols = ['Hour','T Ground','31-day Avg lag DB']) #Read the weather data, ignoring the first 25 lines of header
 
 First_Hour = WeatherData[WeatherData["Hour"] == 1] #Creates a data frame containing only data from the first hour of each day in the weather file
 First_Hour = First_Hour.set_index([pd.Index(range(365))]) #Sets the index of First_Hour to be the number of days in the year/number of entries in First_Hour
@@ -245,7 +246,7 @@ def Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, C
         Dwelling_Profile, Included_Code = Filter_DataSet_ByFixture(Dwelling_Profile, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath) #Call the Filter_DataSet_ByFixture function to limit the resulting profile to only contain draws that match the specified filter
     else: #If everything is included
         Included_Code = ['F','S','C','D','B'] #Use Included_Code to show that all are included, don't filter data set
-    
+
     Dwelling_Profile = Dwelling_Profile.sort_values(['Start Time of Year (hr)']) #Sorts the draws in the in chronological order
 
     return Dwelling_Profile, Included_Code #Return the Dwelling_Profile data frame and the list of profiles when this function is finished
@@ -481,19 +482,19 @@ def Active_Draw_Ending(Combined_Profile, Result_Profile, Active_Draw_Indices, Ne
 def Combined_Profile_LargeBuilding(Profiles, Water):
     Combined_Profile = pd.concat(Profiles) #Creates a concatenated dataframe of the profiles in the list. This enables handling all of them in a single data frame
     Combined_Profile = Combined_Profile.sort_values(['Start Time of Year (hr)']) #Sorts the draws in the combined draw profile by the yearly start time to combine all dwelling draw profiles in chronological order
-    
+
     Combined_Profile = Combined_Profile.reset_index() #Updates the index to match the newly sorted draw profile
     del Combined_Profile['index']
-    
+
     Combined_Profile['End Time of Year (hr)'] = Combined_Profile['Start Time of Year (hr)'] + Combined_Profile['Duration (min)'] / 60. #Calculates that ending time of each draw by adding the duration of that draw to its start time):
-    
+
     Combined_Profile['Start time (hr)'] = Combined_Profile['Start Time of Year (hr)'] % 24 #Update the 'Start time (hr)' column
 
     if Water == 'Hot': #If the user wants to generate a hot water draw profile
         Combined_Profile['Hot Water Flow Rate (gpm)'] = Combined_Profile['Flow Rate (gpm)'] * Combined_Profile['Fraction Hot Water'] #Calculate the new, combined hot water flow rates in rach draw
         Combined_Profile['Hot Water Volume (gal)'] = Combined_Profile['Hot Water Flow Rate (gpm)'] * Combined_Profile['Duration (min)'] #Calculate the volume of hot water in each draw
-    
-    return Combined_Profile #Return the data frame as the result of the function    
+
+    return Combined_Profile #Return the data frame as the result of the function
 
 #%%---------------------------GENERATE AND SAVE REQUESTED DRAW PROFILE---------
 
@@ -524,7 +525,7 @@ for i in range(len(NumberBedrooms_Dwellings)): #For each entry in the list Numbe
 
     if SDLM == 'Yes': #If SDLM == 'Yes' then  execute this code calcualting the SDLM and adding it to the flow rate in the draw profile
         Dwelling_Profile = Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwellings[i], Water) #Calls the Create_Mixed_Profile_SDLM to add the SDLM impacts into the draw profile. Note that this is still mixed temperature data
-    
+
     if Combined == 'No' and Combined_LargeBuilding == 'No': #If the user does not want all draw profiles combined into a single file, use this code to print one file for each draw profile
 
         if not os.path.exists(Folder_Output + os.sep + Building_Type + os.sep + Water):
@@ -532,14 +533,14 @@ for i in range(len(NumberBedrooms_Dwellings)): #For each entry in the list Numbe
 
         if Building_Type == 'Multi': #If it's a multi-family building
             if SDLM == 'Yes':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name          
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
             elif SDLM == 'No':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name          
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
         elif Building_Type == 'Single': #If it's a single family building
             if SDLM == 'Yes':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name          
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
             elif SDLM == 'No':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name          
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
     elif Combined == 'Yes' or Combined_LargeBuilding == 'Yes': #If the user wants the draw profiles to be combined then execute this code
             Profiles.append(Dwelling_Profile) #Add the draw profile to the list of draw profiles that we need to combine
@@ -548,23 +549,23 @@ if Combined == 'Yes': #If the user wants the draw profiles to be combined into o
     Dwelling_Profile, Combined_Profile = Combine_Profiles(Profiles, Water) #Call the Combine_Profiles function to combine all of the profiles generated in this run
 
     if not os.path.exists(Folder_Output + os.sep + Building_Type + os.sep + Water):
-        os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)     
+        os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)
 
     if SDLM == 'Yes':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
     elif SDLM == 'No':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
 #   All of the following code is for debugging purposes
 
 #    Dwelling_Profile['Volume (gal)'] = Dwelling_Profile['Duration (min)'] * Dwelling_Profile['Flow Rate (gpm)'] #For debugging
 #    Combined_Profile['Volume (gal)'] = Combined_Profile['Duration (min)'] * Combined_Profile['Flow Rate (gpm)'] #For debugging
-#        
+#
 #    p1 = figure(width=1200, height=600, x_axis_label='Time (hr)', y_axis_label = 'Volume (gal)')
-#    p1.line(Dwelling_Profile['Start Time of Year (hr)'], Dwelling_Profile['Volume (gal)'].cumsum(), legend='Dwelling_Profile', color = 'red')   
+#    p1.line(Dwelling_Profile['Start Time of Year (hr)'], Dwelling_Profile['Volume (gal)'].cumsum(), legend='Dwelling_Profile', color = 'red')
 #    p1.line(Combined_Profile['Start Time of Year (hr)'], Combined_Profile['Volume (gal)'].cumsum(), legend='Combined_Profile', color = 'blue')
 #    p1.legend.location = 'top_left'
-#    
+#
 #    p = gridplot([[p1]])
 #    output_file(Folder_Output + '\Debugging.html', title = 'Volumes')
 #    save(p)
@@ -576,10 +577,10 @@ if Combined_LargeBuilding == 'Yes': #If the user wants the draw profiles to be c
         os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)
 
     if SDLM == 'Yes':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Water=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Included=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
     elif SDLM == 'No':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Water=' + Water + '_Profile=' + str(NumberBedrooms_Dwellings) + '_Included=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
-        
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+
 #    p1 = figure(width=1200, height=600, x_axis_label='Time (hr)', y_axis_label = 'Volume (gal)')
 #    p1.line(Dwelling_Profile['Start Time of Year (hr)'], Dwelling_Profile['Volume (gal)'].cumsum(), legend='Dwelling_Profile', color = 'red')
 #    p1.line(Combined_Profile['Start Time of Year (hr)'], Combined_Profile['Volume (gal)'].cumsum(), legend='Combined_Profile', color = 'blue')
@@ -591,4 +592,3 @@ if Combined_LargeBuilding == 'Yes': #If the user wants the draw profiles to be c
 
 end_time = time.time()
 print("total = {}, mixed = {}, hot = {}".format(end_time - start_time, end_laggard_mixed-start_laggard_mixed, end_laggard_hot-start_laggard_hot))
-
