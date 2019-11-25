@@ -44,6 +44,21 @@ total time - 17 sec. with swifter, 21 sec. without swifter
 each weather data swap with swifter - 900 ms
 each weather data swap without swifter - 600 ms
 
+Timing insights (Nathan's Work Computer - convert to two new climate zones, approx 1798144 rows long):
+conversion 1:
+Pandas Apply: 100%
+1798144/1798144 [00:48<00:00, 37176.78it/s] (took 48 sec)
+Code block 'csv data to file for climate zone 3' took: 26095.38014 ms
+Code block 'converting to climate zone 3 complete, it' took: 75957.06203 ms
+
+conversion 2:
+Pandas Apply: 100%
+1798144/1798144 [00:53<00:00, 33843.68it/s]
+Code block 'csv data to file for climate zone 4' took: 23848.59601 ms
+Code block 'converting to climate zone 4 complete, it' took: 78315.12375 ms
+
+time to run both zones = 157.7960069179535 sec
+
 @author: Nathan Iltis
 """
 #%%-------------------------------IMPORT STATEMENTS--------------------------
@@ -58,23 +73,27 @@ start_time = time.time() # mark the beginning of the execution time for referenc
 #%%------------------------------INPUTS--------------------------------------
 #Folder paths - assumes the profile has been created and is in the appropriate folder
 #file to convert to a new climate zone:
-Folder = os.path.dirname(__file__) + os.sep #The path to the folder where you have the base files for this script stored
+Folder = os.path.dirname(__file__)#The path to the folder where you have the base files for this script stored
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
-New_Climate_Zones = list(range(2,17)) #specify which climate zones to convert the file to - can be a number from 1-16
+New_Climate_Zones = list(range(1,17)) #specify which climate zones to convert the file to - can be a number from 1-16, must be a list
 #file to convert to a new climate zone:
-File = "Bldg=Single_CZ=1_Wat=Hot_Prof=5_SDLM=Yes_CFA=3500_Inc=['F', 'S', 'C', 'D', 'B'].csv" # mjust use double-quotations since string has singles already
+File = "Bldg=Single_CZ=1_Wat=Hot_Prof=1_SDLM=Yes_CFA=800_Inc=['F', 'S', 'C', 'D', 'B'].csv" # mjust use double-quotations since string has singles already
 Split_Up = File.replace(".csv","").split(sep = '_')
 Specifier_Dict = {each.split(sep = "=")[0] : each.split(sep = "=")[1] for each in Split_Up}
 
 Building_Type = Specifier_Dict['Bldg'] #Either 'Single' for a single family or 'Multi' for a multi-family building
 SDLM = Specifier_Dict['SDLM'] #Either 'Yes' or 'No'. This flag determines whether or not the tool has added SDLM into the water flow calculations
 Water = Specifier_Dict['Wat'] #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
+# Water = 'Hot'#for testing
 Conditioned_Area = Specifier_Dict['CFA']
 ClimateZone = Specifier_Dict['CZ']
+# ClimateZone = 1 #for testing
+if ClimateZone in New_Climate_Zones: New_Climate_Zones.remove(ClimateZone) #remove the current climate zone from the list of new climate zones so we dont do an extra conversion.
 
-File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + Building_Type + os.sep + Water + os.sep + File
+File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + Building_Type + os.sep + Water + os.sep + File #for normal use
+# File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + 'Unused Profiles' + os.sep + File #for testing
 Folder_Output = File_Location
 #%%-----------------------------ERROR CHECKING-------------------------------
 #If the user has tried to convert a mixed water profile
@@ -169,8 +188,8 @@ for each in New_Climate_Zones: #repeat for each new zone required
         #reorder
         Data = Data[proper_order]
 
-        Output_File_Name = File.replace("CZ={}".format(ClimateZone),"CZ={}".format(each))
-        # with CodeTimer('csv data to file'): #for testing
-        Data.to_csv(Folder_Output.replace(File, Output_File_Name), index = False)
+        Output_File_Name = File.replace("CZ={}".format(ClimateZone),"CZ={}".format(each)) #specify new climate zone in the file name
+        with CodeTimer('csv data to file for climate zone {0}'.format(each)): #for testing
+            Data.to_csv(Folder_Output.replace(File, Output_File_Name), index = False)
 
 print("time to run = {}".format(time.time() - start_time))
