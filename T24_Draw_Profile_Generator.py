@@ -49,10 +49,6 @@ Known issues with this script:
         time with some ending before others. This can cause issues with calculated flow rates and durations, and results in errors in flow volumes. Watch out for this
         issue when creating profiles with many dwelling units. Profiles with faucets (Many draws) and clotheswashers (Repeated short draws in a short period of time)
         are also susceptible. Some manual manipulation of draw profiles may be necessary. Look for draws where the volume of the draw is 0 gal
-    -Create_Hot_Profile_NoSDLM and Combine_Profiles can get SSSSLLLOOOOWWW. In the case of Create_Hot_Profile_NoSDLM this is believed to be because the mains inlet
-        temperature is not being identified and copied in using the most efficient method. Combine_Profiles gets slow because it's iterating through each line of a draw
-        profile, potentially hundreds of thousands of lines. When creating large, hot profiles plan on running it overnight. I'm not sure of what potential solutions
-        could be better
 
 @author: Peter Grant
 """
