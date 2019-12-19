@@ -69,21 +69,22 @@ end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 
 #Describe the building. All lists describing the building need to be the same length for this script to work correctly
 
 Building_Type = 'Multi' #Either 'Single' for a single family or 'Multi' for a multi-family building
-SDLM = 'No' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
-Water = 'Mixed' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
-NumberBedrooms_Dwellings = [1] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
-SquareFootage_Dwellings = [600] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
-ClimateZone = 1 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
+SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
+Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
+NumberBedrooms_Dwellings = [0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3] * 8 #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
+SquareFootage_Dwellings = [540, 750, 750, 750, 750, 750, 1080, 1080, 1080, 1080, 1410] * 8 #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
+ClimateZone = 3 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
+Version = 2019 #States the version of the T24 draw profile data set to use. Currently available options are 2016 and 2019
 
 #Describe the final profile format
 
 Combined = 'No' #Either 'Yes' or 'No'. If 'No', will print one file for each dwelling in the lists. If 'Yes', will combine the profiles for all dwellings into a single file
-Combined_LargeBuilding = 'No' #Either 'Yes' or 'No'. The script for combining profiles can be slow, take a long time to run. This function provides a less precise, faster version
-Include_Faucet = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Combined_LargeBuilding = 'Yes' #Either 'Yes' or 'No'. The script for combining profiles can be slow, take a long time to run. This function provides a less precise, faster version
+Include_Faucet = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 Include_Shower = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Clothes = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Dish = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Bath = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Clothes = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Dish = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Bath = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 
 #Folder paths
 Folder = os.path.dirname(__file__) + os.sep #The path to the folder where you have the base files for this script stored
@@ -135,12 +136,17 @@ if len(NumberBedrooms_Dwellings) != len(SquareFootage_Dwellings): #If the lists 
 #%%----------------------------FUNCTION DECLARATIONS-------------------------
 
 #This function creates the mixed hot water draw profile for a single dwelling
-def Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath): #It needs the type of building, number of bedrooms in the dwelling, and current variant of the building as inputs
-
-    Daily_Profiles = pd.read_csv(Folder + os.sep + 'DailyProfiles.csv') #Reads the .csv file containing information about the daily profiles used in CBECC-Res
+def Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath, Version): #It needs the type of building, number of bedrooms in the dwelling, and current variant of the building as inputs
+    if Version == 2016:
+        if Building_Type == 'Single':
+            Daily_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'DailyProfilesSF.csv') #Reads the .csv file containing information about the daily profiles used in CBECC-Res
+        elif Building_Type == 'Multi':
+            Daily_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'DailyProfilesMF.csv') #Reads the .csv file containing information about the daily profiles used in CBECC-Res
+    elif Version == 2019:
+        Daily_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'DailyProfiles.csv') #Reads the .csv file containing information about the daily profiles used in CBECC-Res
 
     if Building_Type == 'Single': #If simulating a single family building
-        Annual_Profiles = pd.read_csv(Folder + os.sep + 'AnnualProfileSF.csv') #Open the file containing annual profile information for single family buildings
+        Annual_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'AnnualProfileSF.csv') #Open the file containing annual profile information for single family buildings
 
         Profile = 'DHW' + str(NumberBedrooms_Dwelling) + 'BR' #Create a string stating the name of the annual profile used in CBECC-Res. This is done by adding 'DHW' before the number of bedrooms and 'BR' after
         Annual_Profile = Annual_Profiles[Profile] #Filter the Annuak_Profiles data frame to only show data from this building draw profile
@@ -160,7 +166,7 @@ def Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant,
         del Dwelling_Profile['index']
 
     else: #If Building_Type is not 'Single', it must be 'Multi'. This code creates a profile for a dwelling in a multi-family building
-        Annual_Profiles = pd.read_csv(Folder + os.sep + 'AnnualProfileMF.csv') #Read the annual profiles for multi-family buildings
+        Annual_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'AnnualProfileMF.csv') #Read the annual profiles for multi-family buildings
 
         Profile = 'DHW' + str(NumberBedrooms_Dwelling) + 'BR' + str(Variant) #Create a string storing the name of the draw profile by appending 'DHW' to the start of the draw profile and 'BR' to the end
         Annual_Profile = Annual_Profiles[Profile] #Filter Annual_Profile to only contain data for the desired profile
@@ -188,12 +194,18 @@ def Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant,
 
     return Dwelling_Profile, Included_Code #Return the Dwelling_Profile data frame and the list of profiles when this function is finished
 
-def Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, ClimateZone, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath): #It needs the type of building, number of bedrooms in the dwelling, and current variant of the building as inputs
+def Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, ClimateZone, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath, Version): #It needs the type of building, number of bedrooms in the dwelling, and current variant of the building as inputs
 
-    Daily_Profiles = pd.read_csv(Folder + os.sep + 'DailyProfiles.csv') #Reads the .csv file containing information about the daily profiles used in CBECC-Res
+    if Version == 2016:
+        if Building_Type == 'Single':
+            Daily_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'DailyProfilesSF.csv') #Reads the .csv file containing information about the daily profiles used in CBECC-Res
+        elif Building_Type == 'Multi':
+            Daily_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'DailyProfilesMF.csv') #Reads the .csv file containing information about the daily profiles used in CBECC-Res
+    elif Version == 2019:
+        Daily_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'DailyProfiles.csv') #Reads the .csv file containing information about the daily profiles used in CBECC-Res
 
     if Building_Type == 'Single': #If simulating a single family building
-        Annual_Profiles = pd.read_csv(Folder + os.sep + 'AnnualProfileSF.csv') #Open the file containing annual profile information for single family buildings
+        Annual_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'AnnualProfileSF.csv') #Open the file containing annual profile information for single family buildings
 
         Profile = 'DHW' + str(NumberBedrooms_Dwelling) + 'BR' #Create a string stating the name of the annual profile used in CBECC-Res. This is done by adding 'DHW' before the number of bedrooms and 'BR' after
         Annual_Profile = Annual_Profiles[Profile] #Filter the Annuak_Profiles data frame to only show data from this building draw profile
@@ -216,7 +228,7 @@ def Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, C
         del Dwelling_Profile['index']
 
     else: #If Building_Type is not 'Single', it must be 'Multi'. This code creates a profile for a dwelling in a multi-family building
-        Annual_Profiles = pd.read_csv(Folder + os.sep + 'AnnualProfileMF.csv') #Read the annual profiles for multi-family buildings
+        Annual_Profiles = pd.read_csv(Folder + os.sep + 'SourceData' + os.sep + str(Version) + os.sep + 'AnnualProfileMF.csv') #Open the file containing annual profile information for multi family buildings
 
         Profile = 'DHW' + str(NumberBedrooms_Dwelling) + 'BR' + str(Variant) #Create a string storing the name of the draw profile by appending 'DHW' to the start of the draw profile and 'BR' to the end
         Annual_Profile = Annual_Profiles[Profile] #Filter Annual_Profile to only contain data for the desired profile
@@ -514,10 +526,10 @@ for i in range(len(NumberBedrooms_Dwellings)): #For each entry in the list Numbe
                 Variant = 0
 
     if Water == 'Hot': #If the user is requesting how water information
-        Dwelling_Profile, Included_Code = Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwellings[i], Variants[Variant], ClimateZone, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath)
+        Dwelling_Profile, Included_Code = Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwellings[i], Variants[Variant], ClimateZone, Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath, Version)
 
     elif Water == 'Mixed': #If the user is requesting mixed water flow exiting the fixture
-        Dwelling_Profile, Included_Code = Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwellings[i], Variants[Variant], Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath) #Call the Create_Mixed_Profile_AtFixture function to create the draw profile for this dwelling. Note that this returns the mixed water profile without including SDLM
+        Dwelling_Profile, Included_Code = Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwellings[i], Variants[Variant], Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath, Version) #Call the Create_Mixed_Profile_AtFixture function to create the draw profile for this dwelling. Note that this returns the mixed water profile without including SDLM
 
     if SDLM == 'Yes': #If SDLM == 'Yes' then  execute this code calcualting the SDLM and adding it to the flow rate in the draw profile
         Dwelling_Profile = Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwellings[i], Water) #Calls the Create_Mixed_Profile_SDLM to add the SDLM impacts into the draw profile. Note that this is still mixed temperature data
@@ -529,14 +541,14 @@ for i in range(len(NumberBedrooms_Dwellings)): #For each entry in the list Numbe
 
         if Building_Type == 'Multi': #If it's a multi-family building
             if SDLM == 'Yes':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
             elif SDLM == 'No':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
         elif Building_Type == 'Single': #If it's a single family building
             if SDLM == 'Yes':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
             elif SDLM == 'No':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
     elif Combined == 'Yes' or Combined_LargeBuilding == 'Yes': #If the user wants the draw profiles to be combined then execute this code
             Profiles.append(Dwelling_Profile) #Add the draw profile to the list of draw profiles that we need to combine
@@ -548,9 +560,9 @@ if Combined == 'Yes': #If the user wants the draw profiles to be combined into o
         os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)
 
     if SDLM == 'Yes':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
     elif SDLM == 'No':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
 #   All of the following code is for debugging purposes
 
@@ -573,9 +585,9 @@ if Combined_LargeBuilding == 'Yes': #If the user wants the draw profiles to be c
         os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)
 
     if SDLM == 'Yes':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
     elif SDLM == 'No':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
 #    p1 = figure(width=1200, height=600, x_axis_label='Time (hr)', y_axis_label = 'Volume (gal)')
 #    p1.line(Dwelling_Profile['Start Time of Year (hr)'], Dwelling_Profile['Volume (gal)'].cumsum(), legend='Dwelling_Profile', color = 'red')
