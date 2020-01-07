@@ -26,28 +26,28 @@ include_columns = [
     'Month',
     'Day',
     'Hour',
-    # 'TDV Elec',
-    # 'TDV NatGas',
-    # 'TDV Propane',
+    'TDV Elec',
+    'TDV NatGas',
+    'TDV Propane',
     'Dry Bulb',
-    # 'Wet Bulb',
-    # 'Dew Point',
-    # '31-day Avg lag DB',
-    # '14-day Avg lag DB',
-    # '7-day Avg lag DB',
-    # 'T Ground',
-    # "previous day's peak DB",
-    # 'T sky',
-    # 'Wind direction',
-    # 'Wind speed',
-    # 'Global Horizontal Radiation',
-    # 'Direct Normal Radiation',
-    # 'Diffuse Horiz Radiation',
-    # 'Total Sky Cover'
+    'Wet Bulb',
+    'Dew Point',
+    '31-day Avg lag DB',
+    '14-day Avg lag DB',
+    '7-day Avg lag DB',
+    'T Ground',
+    "previous day's peak DB",
+    'T sky',
+    'Wind direction',
+    'Wind speed',
+    'Global Horizontal Radiation',
+    'Direct Normal Radiation',
+    'Diffuse Horiz Radiation',
+    'Total Sky Cover'
     ]
 
 Folder_Output = os.path.dirname(__file__) + os.sep + 'Weather_Data_Manipulated'
-Output_File_Name = 'AllZones_Monthly_Rolling3MonthAve_DryBulb.xlsx' #needs to end in .xlsx
+Output_File_Name = 'AllZones_AllWeather.xlsx' #needs to end in .xlsx
 Output_Path = Folder_Output + os.sep + Output_File_Name
 
 #%%-----------------LOAD WEATHER DATA---------------------------
@@ -66,35 +66,35 @@ for each in Climate_Zones:
     Zones_Dict[frame_name] = WeatherData
 
 #%%-----------------Special Analyses---------------------------
-monthly_rolling_average_dict = {} #dictionary to store the average monthly temperatures
-# minimum_monthly_rolling_average_values_dict = {}
-#this method uses multiindices:
-for each in Zones_Dict:
-    this_frame = Zones_Dict[each].copy()
-    this_frame = this_frame.set_index(['Month','Day','Hour'])
-    this_frame.index = this_frame.index.get_level_values('Month')
-    this_frame = this_frame.groupby('Month').mean()
-    this_frame.loc[0] = this_frame.loc[this_frame.index[-1]]
-    this_frame.loc[13] = this_frame.loc[this_frame.index[0]]
-    this_frame = this_frame.sort_index()
-    this_frame = this_frame.rolling(3,center=True).mean()
-    this_frame = this_frame.drop(index = [0,13])
-    monthly_rolling_average_dict[each] = this_frame
-    # minimum = this_frame['Dry Bulb'].min()
-    # minimum_monthly_rolling_average_values_dict.
+# monthly_rolling_average_dict = {} #dictionary to store the average monthly temperatures
+# # minimum_monthly_rolling_average_values_dict = {}
+# #this method uses multiindices:
+# for each in Zones_Dict:
+#     this_frame = Zones_Dict[each].copy()
+#     this_frame = this_frame.set_index(['Month','Day','Hour'])
+#     this_frame.index = this_frame.index.get_level_values('Month')
+#     this_frame = this_frame.groupby('Month').mean()
+#     this_frame.loc[0] = this_frame.loc[this_frame.index[-1]]
+#     this_frame.loc[13] = this_frame.loc[this_frame.index[0]]
+#     this_frame = this_frame.sort_index()
+#     this_frame = this_frame.rolling(3,center=True).mean()
+#     this_frame = this_frame.drop(index = [0,13])
+#     monthly_rolling_average_dict[each] = this_frame
+#     # minimum = this_frame['Dry Bulb'].min()
+#     # minimum_monthly_rolling_average_values_dict.
 
 # %%-----------------WRITE TO FILE---------------------------
 #print all to the same file if desired:
 writer = pd.ExcelWriter(Output_Path, engine='xlsxwriter')
 
-#for writing full data sheets
-# for each in Zones_Dict:
-#     this_frame = Zones_Dict[each].copy()
-#     this_frame.to_excel(writer, sheet_name = each, index = False)
+# for writing full data sheets
+for each in Zones_Dict:
+    this_frame = Zones_Dict[each].copy()
+    this_frame.to_excel(writer, sheet_name = each, index = False)
 
-#for writing monthly average sheets
-for each in monthly_rolling_average_dict:
-    this_frame = monthly_rolling_average_dict[each].copy()
-    this_frame.to_excel(writer, sheet_name = each, index = True)
+# #for writing monthly average sheets
+# for each in monthly_rolling_average_dict:
+#     this_frame = monthly_rolling_average_dict[each].copy()
+#     this_frame.to_excel(writer, sheet_name = each, index = True)
 
 writer.save()
