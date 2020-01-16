@@ -73,7 +73,7 @@ SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool
 Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
 NumberBedrooms_Dwellings = [5] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
 SquareFootage_Dwellings = [3500] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
-ClimateZone = 1 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
+ClimateZone = 5 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 Version = 2019 #States the version of the T24 draw profile data set to use. Currently available options are 2016 and 2019
 
 #Describe the final profile format
@@ -97,7 +97,7 @@ Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder th
 #These constants can be changed if wanting to try different arrangements (E.g. A different water heater set temperature)
 Temperature_Shower = 105 #deg F
 Temperature_Bath = 105 #deg F
-Temperature_Supply_WaterHeater = 115 #deg F
+Temperature_Supply_WaterHeater = 125 #deg F
 
 #%%-----------------LOAD WEATHER DATA---------------------------
 #gather the climate zone's weaher data and create T_Mains - which only includes one temperature for each day of the year (is 365 long)
