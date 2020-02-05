@@ -68,23 +68,23 @@ end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 
 
 #Describe the building. All lists describing the building need to be the same length for this script to work correctly
 
-Building_Type = 'Multi' #Either 'Single' for a single family or 'Multi' for a multi-family building
+Building_Type = 'Single' #Either 'Single' for a single family or 'Multi' for a multi-family building
 SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
 Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
-NumberBedrooms_Dwellings = [0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3] * 8 #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
-SquareFootage_Dwellings = [540, 750, 750, 750, 750, 750, 1080, 1080, 1080, 1080, 1410] * 8 #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
-ClimateZone = 3 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
+NumberBedrooms_Dwellings = [5] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
+SquareFootage_Dwellings = [3500] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
+ClimateZone = 1 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 Version = 2019 #States the version of the T24 draw profile data set to use. Currently available options are 2016 and 2019
+Distribution_System_Type = 'Trunk and Branch' #Used to calculate the extra hot water flow caused by the hot water distribution system. Based on table B-1 in the ACM. Options are 'Trunk and Branch', 'Central Parallel Piping', 'Point of Use', 'Recirculation - Non-Demand Control', 'Recirculation with Manual Demand Control', 'Recirculation with Motion Sensor Demand Control', 'Pipe Insulation', 'Central Parallel Piping with 5 ft Maximum Length', 'Compact Design', 'Recirculation with Manual Demand Control - HERS', and 'Recirculation with Motion Sensor Demand Control - HERS'
 
 #Describe the final profile format
-
 Combined = 'No' #Either 'Yes' or 'No'. If 'No', will print one file for each dwelling in the lists. If 'Yes', will combine the profiles for all dwellings into a single file
-Combined_LargeBuilding = 'Yes' #Either 'Yes' or 'No'. The script for combining profiles can be slow, take a long time to run. This function provides a less precise, faster version
-Include_Faucet = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Combined_LargeBuilding = 'No' #Either 'Yes' or 'No'. The script for combining profiles can be slow, take a long time to run. This function provides a less precise, faster version
+Include_Faucet = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 Include_Shower = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Clothes = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Dish = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
-Include_Bath = 'No' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Clothes = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Dish = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
+Include_Bath = 'Yes' #Either 'Yes' or 'No'. If 'Yes', entries to these fixtures will be included in the final draw profile. If 'No', they will be removed from the data set
 
 #Folder paths
 Folder = os.path.dirname(__file__) + os.sep #The path to the folder where you have the base files for this script stored
@@ -97,7 +97,7 @@ Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder th
 #These constants can be changed if wanting to try different arrangements (E.g. A different water heater set temperature)
 Temperature_Shower = 105 #deg F
 Temperature_Bath = 105 #deg F
-Temperature_Supply_WaterHeater = 115 #deg F
+Temperature_Supply_WaterHeater = 115 #deg F. CSE assumes 115 deg F hot water at the fixture, per 1/28/2020 email with Aaron Boranian
 
 #%%-----------------LOAD WEATHER DATA---------------------------
 #gather the climate zone's weaher data and create T_Mains - which only includes one temperature for each day of the year (is 365 long)
@@ -132,6 +132,11 @@ if SDLM != 'Yes' and SDLM != 'No':
 if len(NumberBedrooms_Dwellings) != len(SquareFootage_Dwellings): #If the lists for number of bedrooms in each dwelling and square footage of each dwelling don't match
     print('NumberBedrooms_Dwellings and SquareFootage_Dwellings must have the same number of entries') #Print an error message
     sys.exit() #Exit the program
+    
+if Distribution_System_Type != 'Trunk and Branch' and Distribution_System_Type != 'Central Parallel Piping' and Distribution_System_Type != 'Point of Use' and Distribution_System_Type != 'Recirculation - Non-Demand Control' and Distribution_System_Type != 'Recirculation with Manual Demand Control' and Distribution_System_Type != 'Recirculation with Motion Sensor Demand Control' and Distribution_System_Type != 'Pipe Insulation' and Distribution_System_Type != 'Central Parallel Piping with 5 ft Maximum Length' and Distribution_System_Type != 'Compact Design' and Distribution_System_Type != 'Recirculation with Manual Demand Control - HERS' and Distribution_System_Type != 'Recirculation with Motion Sensor Demand Control - HERS':
+    print('Invalid entry for Distribution_System_Type. Check tor typos.')
+    sys.exit()    
+
 
 #%%----------------------------FUNCTION DECLARATIONS-------------------------
 
@@ -259,15 +264,49 @@ def Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, C
 
     return Dwelling_Profile, Included_Code #Return the Dwelling_Profile data frame and the list of profiles when this function is finished
 
-def Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwelling, Water): #This function calculates the total mixed water flow rate by taking SDLM into account
+def Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwelling, Water, Distribution_System_Type): #This function calculates the total mixed water flow rate by taking SDLM into account
 
+    #Identify the distribution system multiplier per table B-1 in the ACM
+    if Distribution_System_Type == 'Trunk and Branch':
+        Distribution_System_Multiplier = 1
+    elif Distribution_System_Type == 'Central Parallel Piping':
+        Distribution_System_Multiplier = 1.1
+    elif Distribution_System_Type == 'Point of Use':
+        Distribution_System_Multiplier = 0.3
+    elif Distribution_System_Type == 'Recirculation - Non-Demand Control':
+        Distribution_System_Multiplier = 9.8
+    elif Distribution_System_Type == 'Recirculation with Manual Demand Control':
+        Distribution_System_Multiplier = 1.75
+    elif Distribution_System_Type == 'Recirculation with Motion Sensor Demand Control':
+        Distribution_System_Multiplier = 2.6
+    elif Distribution_System_Type == 'Pipe Insulation':
+        Distribution_System_Multiplier = 0.85
+    elif Distribution_System_Type == 'Central Parallel Piping with 5 ft Maximum Length':
+        Distribution_System_Multiplier = 1
+    elif Distribution_System_Type == 'Compact Design':
+        Distribution_System_Multiplier = 0.7
+    elif Distribution_System_Type == 'Recirculation with Manual Demand Control - HERS':
+        Distribution_System_Multiplier = 1.6
+    elif Distribution_System_Type == 'Recirculation with Motion Sensor Demand Control - HERS':
+        Distribution_System_Multiplier = 2.4
+    
     Standard_Distribution_Loss_Multiplier = 1.0032 + 0.0001864 * min(2500, SquareFootage_Dwelling) - 0.00000002165 * min(2500, SquareFootage_Dwelling) ** 2 #Calculated per Equation 6 in the ACM. Believe that there is a typo in the ACM, and it should be +1.0032, not =1.0032. Based on both results of equation and comparing to previous versions
-    Dwelling_Profile['Flow Rate (gpm)'] = Dwelling_Profile['Flow Rate (gpm)'] * Standard_Distribution_Loss_Multiplier #Multiply the flow rate of water by SDLM, matching the calculations in CBECC (This is a silly way to do it, I think they should have applied SDLM to duration instead, but I don't get to make the rules)
+    Distribution_Loss_Multiplier = 1 + (Standard_Distribution_Loss_Multiplier - 1) * Distribution_System_Multiplier #Combine the Distribution System Multiplier and Standard Distribution Loss Multiplier to get the Distribution Loss Multiplier per Eqn 5 of Appendix B in the ACM
+
+    #Creaes new columns that identify whether or not the duration of the draw gets modified by distribution loss multipliers. All draws except the clotheswasher and dishwaser get modified
+    Dwelling_Profile['Isnt CWSH'] = Dwelling_Profile['Fixture'] != 'CWSH' #New column, TRUE if the fixture is NOT the clotheswasher
+    Dwelling_Profile['Isnt DWSH'] = Dwelling_Profile['Fixture'] != 'DWSH' #New column, TRUE if the fixture is NOT the dishwasher
+    Dwelling_Profile['Is CWSH'] = Dwelling_Profile['Fixture'] == 'CWSH' #New column, TRUE if the fixture IS The clotheswasher
+    Dwelling_Profile['Is DWSH'] = Dwelling_Profile['Fixture'] == 'DWSH' #New column, TRUE if the fixture IS the dishwasher
+
+    Dwelling_Profile['Duration (min)'] = Dwelling_Profile['Duration (min)'] * (1 * Dwelling_Profile['Is CWSH'] + 1 * Dwelling_Profile['Is DWSH'] + Distribution_Loss_Multiplier * Dwelling_Profile['Isnt CWSH'] * Dwelling_Profile['Isnt DWSH']) #Multiply the duration by the loss multiplier if the draw is not the clothes washer or dishwasher. Multiply it by 1 if it is the clothes washer or dishwasher
 
     if Water == 'Hot': #If the user wants to generate a hot water draw profile
-        Dwelling_Profile['Hot Water Flow Rate (gpm)'] = Dwelling_Profile['Hot Water Flow Rate (gpm)'] * Standard_Distribution_Loss_Multiplier #Also apply the SDLM to the hot water flow rate
-        Dwelling_Profile['Hot Water Volume (gal)'] = Dwelling_Profile['Hot Water Volume (gal)'] * Standard_Distribution_Loss_Multiplier #Also apply the SDLM to the volume of hot water consumed
-
+        Dwelling_Profile['Hot Water Volume (gal)'] = Dwelling_Profile['Hot Water Volume (gal)']  * (1 * Dwelling_Profile['Is CWSH'] + 1 * Dwelling_Profile['Is DWSH'] + Distribution_Loss_Multiplier * Dwelling_Profile['Isnt CWSH'] * Dwelling_Profile['Isnt DWSH']) #Also apply the the loss multipliers to the volume of the hot water draws
+    
+    #Remove the extra columns used in this function
+    Dwelling_Profile = Dwelling_Profile.drop(columns=['Isnt CWSH', 'Isnt DWSH', 'Is CWSH', 'Is DWSH'])
+    
     return Dwelling_Profile #Return the modified Dwelling_Profile
 
 def Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data):
@@ -531,8 +570,16 @@ for i in range(len(NumberBedrooms_Dwellings)): #For each entry in the list Numbe
     elif Water == 'Mixed': #If the user is requesting mixed water flow exiting the fixture
         Dwelling_Profile, Included_Code = Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwellings[i], Variants[Variant], Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath, Version) #Call the Create_Mixed_Profile_AtFixture function to create the draw profile for this dwelling. Note that this returns the mixed water profile without including SDLM
 
+    #Shorten the 'Included_Code' to reduce file path, make the draw profiles more user friendly. The end result is a series of letters stating the end uses included in the draw profile
+    Included_Code = str(Included_Code) #Convert Included_Code from a list to a string
+    Included_Code = Included_Code.replace("[", "") #Remove all [s from Included_Code
+    Included_Code = Included_Code.replace("]", "") #Remove all ]s from Included_Code
+    Included_Code = Included_Code.replace("'", "") #Remove all apostrophes from Included_Code
+    Included_Code = Included_Code.replace(",", "") #Remove all commas from Included_Code
+    Included_Code = Included_Code.replace(" ", "") #Remove all spaces from Included_Code
+
     if SDLM == 'Yes': #If SDLM == 'Yes' then  execute this code calcualting the SDLM and adding it to the flow rate in the draw profile
-        Dwelling_Profile = Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwellings[i], Water) #Calls the Create_Mixed_Profile_SDLM to add the SDLM impacts into the draw profile. Note that this is still mixed temperature data
+        Dwelling_Profile = Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwellings[i], Water, Distribution_System_Type) #Calls the Create_Mixed_Profile_SDLM to add the SDLM impacts into the draw profile. Note that this is still mixed temperature data
 
     if Combined == 'No' and Combined_LargeBuilding == 'No': #If the user does not want all draw profiles combined into a single file, use this code to print one file for each draw profile
 
@@ -541,14 +588,14 @@ for i in range(len(NumberBedrooms_Dwellings)): #For each entry in the list Numbe
 
         if Building_Type == 'Multi': #If it's a multi-family building
             if SDLM == 'Yes':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
             elif SDLM == 'No':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + str(Variants[Variant]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
         elif Building_Type == 'Single': #If it's a single family building
             if SDLM == 'Yes':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
             elif SDLM == 'No':
-                Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+                Dwelling_Profile.to_csv(Folder_Output + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings[i]) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
     elif Combined == 'Yes' or Combined_LargeBuilding == 'Yes': #If the user wants the draw profiles to be combined then execute this code
             Profiles.append(Dwelling_Profile) #Add the draw profile to the list of draw profiles that we need to combine
@@ -560,23 +607,9 @@ if Combined == 'Yes': #If the user wants the draw profiles to be combined into o
         os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)
 
     if SDLM == 'Yes':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
     elif SDLM == 'No':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
-
-#   All of the following code is for debugging purposes
-
-#    Dwelling_Profile['Volume (gal)'] = Dwelling_Profile['Duration (min)'] * Dwelling_Profile['Flow Rate (gpm)'] #For debugging
-#    Combined_Profile['Volume (gal)'] = Combined_Profile['Duration (min)'] * Combined_Profile['Flow Rate (gpm)'] #For debugging
-#
-#    p1 = figure(width=1200, height=600, x_axis_label='Time (hr)', y_axis_label = 'Volume (gal)')
-#    p1.line(Dwelling_Profile['Start Time of Year (hr)'], Dwelling_Profile['Volume (gal)'].cumsum(), legend='Dwelling_Profile', color = 'red')
-#    p1.line(Combined_Profile['Start Time of Year (hr)'], Combined_Profile['Volume (gal)'].cumsum(), legend='Combined_Profile', color = 'blue')
-#    p1.legend.location = 'top_left'
-#
-#    p = gridplot([[p1]])
-#    output_file(Folder_Output + '\Debugging.html', title = 'Volumes')
-#    save(p)
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
 if Combined_LargeBuilding == 'Yes': #If the user wants the draw profiles to be combined into one then execute this code
     Dwelling_Profile = Combined_Profile_LargeBuilding(Profiles, Water) #Call the Combine_Profiles function to combine all of the profiles generated in this run
@@ -585,18 +618,9 @@ if Combined_LargeBuilding == 'Yes': #If the user wants the draw profiles to be c
         os.makedirs(Folder_Output + os.sep + Building_Type + os.sep + Water)
 
     if SDLM == 'Yes':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_SDLM=' + SDLM + '_CFA=' + str(SquareFootage_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
     elif SDLM == 'No':
-        Dwelling_Profile.to_csv(Folder_Output + os.sep + Building_Type + os.sep + Water + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
-
-#    p1 = figure(width=1200, height=600, x_axis_label='Time (hr)', y_axis_label = 'Volume (gal)')
-#    p1.line(Dwelling_Profile['Start Time of Year (hr)'], Dwelling_Profile['Volume (gal)'].cumsum(), legend='Dwelling_Profile', color = 'red')
-#    p1.line(Combined_Profile['Start Time of Year (hr)'], Combined_Profile['Volume (gal)'].cumsum(), legend='Combined_Profile', color = 'blue')
-#    p1.legend.location = 'top_left'
-#
-#    p = gridplot([[p1]])
-#    output_file(Folder_Output + os.sep + 'Debugging.html', title = 'Volumes')
-#    save(p)
+        Dwelling_Profile.to_csv(Folder_Output + os.sep + 'Bldg=' + Building_Type + '_CZ=' + str(ClimateZone) + '_Wat=' + Water + '_Prof=' + str(NumberBedrooms_Dwellings) + '_Inc=' + str(Included_Code) + '_Ver=' + str(Version) + '.csv', index = False) #Saves the data to the correct folder with a descriptive file name
 
 end_time = time.time()
 print("total = {}, mixed = {}, hot = {}".format(end_time - start_time, end_laggard_mixed-start_laggard_mixed, end_laggard_hot-start_laggard_hot))
