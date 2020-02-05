@@ -66,7 +66,7 @@ import pandas as pd
 import sys
 import os
 import time
-import swifter
+#import swifter
 from linetimer import CodeTimer
 #%%------------------------------TIMER--------------------------------------
 start_time = time.time() # mark the beginning of the execution time for reference back to later
@@ -79,7 +79,7 @@ Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder th
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
 New_Climate_Zones = list(range(1,17)) #specify which climate zones to convert the file to - can be a number from 1-16, must be a list
 #file to convert to a new climate zone:
-File = "Bldg=Single_CZ=1_Wat=Hot_Prof=1_SDLM=Yes_CFA=800_Inc=['F', 'S', 'C', 'D', 'B'].csv" # mjust use double-quotations since string has singles already
+File = "Bldg=Multi_CZ=1_Wat=Hot_Prof=2j_SDLM=Yes_CFA=1080_Inc=['F', 'S', 'C', 'D', 'B']_Ver=2019.csv" # mjust use double-quotations since string has singles already
 Split_Up = File.replace(".csv","").split(sep = '_')
 Specifier_Dict = {each.split(sep = "=")[0] : each.split(sep = "=")[1] for each in Split_Up}
 
