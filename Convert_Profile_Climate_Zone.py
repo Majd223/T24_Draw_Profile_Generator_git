@@ -111,10 +111,10 @@ if max(New_Climate_Zones) > 16 or min(New_Climate_Zones) < 1:
 #These constants can be changed if wanting to try different arrangements (E.g. A different water heater set temperature)
 Temperature_Shower = 105 #deg F
 Temperature_Bath = 105 #deg F
-Temperature_Supply_WaterHeater = 115 #deg F
+Temperature_Supply_Hot_AtFixture = 115 #deg F
 
 #%%-----------------DEFINITIONS---------------------------
-def Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data):
+def Calculate_Fraction_HotWater(Temperature_Supply_Hot_AtFixture, Data):
 
 #This function estimates the fraction of hot water at various fixtures using the assumptions in the 2016 version of CBECC. Page B-3
 
@@ -130,9 +130,9 @@ def Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data):
     Data['BooleanMask'] = Data['Fixture'] == 'DWSH' #Repeates the same process for the dishwasher
     Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * Fraction_HotWater_DishWasher
     Data['BooleanMask'] = Data['Fixture'] == 'BATH'
-    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Bath - Data['Mains Temperature (deg F)']) / (Temperature_Supply_WaterHeater  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a bath based on the CBECC-Res assumed temperature for baths and the mains water temperature
+    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Bath - Data['Mains Temperature (deg F)']) / (Temperature_Supply_Hot_AtFixture  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a bath based on the CBECC-Res assumed temperature for baths and the mains water temperature
     Data['BooleanMask'] = Data['Fixture'] == 'SHWR'
-    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Shower - Data['Mains Temperature (deg F)']) / (Temperature_Supply_WaterHeater  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a shower based on the CBECC-Res assumed temperature for showers and the mains water temperature
+    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Shower - Data['Mains Temperature (deg F)']) / (Temperature_Supply_Hot_AtFixture  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a shower based on the CBECC-Res assumed temperature for showers and the mains water temperature
 
     del Data['BooleanMask'] #Delete the BoolenaMask column because it adds no value beyond this function
 
@@ -183,7 +183,7 @@ for each in New_Climate_Zones: #repeat for each new zone required
         #recalculate the fileds that were caluclated using the ground temperature (T_Mains):
 
         # with CodeTimer('manipulate weather dataframe'):  #for testing
-        Data = Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data) #Calculate the fraction of hot water for each draw in the draw profile
+        Data = Calculate_Fraction_HotWater(Temperature_Supply_Hot_AtFixture, Data) #Calculate the fraction of hot water for each draw in the draw profile
         Data = Calculate_FlowWater_Hot(Data) #Calculate the flow of hot water for each draw in the draw profile
         #reorder
         Data = Data[proper_order]

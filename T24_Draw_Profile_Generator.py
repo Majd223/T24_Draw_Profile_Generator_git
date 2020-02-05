@@ -97,7 +97,8 @@ Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder th
 #These constants can be changed if wanting to try different arrangements (E.g. A different water heater set temperature)
 Temperature_Shower = 105 #deg F
 Temperature_Bath = 105 #deg F
-Temperature_Supply_WaterHeater = 115 #deg F. CSE assumes 115 deg F hot water at the fixture, per 1/28/2020 email with Aaron Boranian
+Temperature_Supply_Hot_AtFixture = 115 #deg F. CSE assumes 115 deg F hot water at the fixture, per 1/28/2020 email with Aaron Boranian
+
 
 #%%-----------------LOAD WEATHER DATA---------------------------
 #gather the climate zone's weaher data and create T_Mains - which only includes one temperature for each day of the year (is 365 long)
@@ -226,7 +227,7 @@ def Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, C
             Dwelling_Profile = Dwelling_Profile.append(Daily_Profile) #Append the profile for the current day to the data frame for the annual draw profile
         end_laggard_hot = time.time()
 
-        Dwelling_Profile = Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Dwelling_Profile) #Calculate the fraction of hot water for each draw in the draw profile
+        Dwelling_Profile = Calculate_Fraction_HotWater(Temperature_Supply_Hot_AtFixture, Dwelling_Profile) #Calculate the fraction of hot water for each draw in the draw profile
         Dwelling_Profile = Calculate_FlowWater_Hot(Dwelling_Profile) #Calculate the flow of hot water for each draw in the draw profile
 
         Dwelling_Profile = Dwelling_Profile.reset_index() #After appending data into Dwelling_Profile, the index of the data frame will be all janky. These two lines fix it
@@ -249,7 +250,7 @@ def Create_Hot_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwelling, Variant, C
             Dwelling_Profile = Dwelling_Profile.append(Daily_Profile) #Append the profile for the current day to the data frame for the annual draw profile
         end_laggard_hot = time.time()
 
-        Dwelling_Profile = Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Dwelling_Profile) #Calculate the fraction of hot water for each draw in the draw profile
+        Dwelling_Profile = Calculate_Fraction_HotWater(Temperature_Supply_Hot_AtFixture, Dwelling_Profile) #Calculate the fraction of hot water for each draw in the draw profile
         Dwelling_Profile = Calculate_FlowWater_Hot(Dwelling_Profile) #Calculate the flow of hot water for each draw in the draw profile
 
         Dwelling_Profile = Dwelling_Profile.reset_index() #After appending the index will be messed up. These two lines fix that
@@ -309,7 +310,7 @@ def Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwelling, Water, Distrib
     
     return Dwelling_Profile #Return the modified Dwelling_Profile
 
-def Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data):
+def Calculate_Fraction_HotWater(Temperature_Supply_Hot_AtFixture, Data):
 
 #This function estimates the fraction of hot water at various fixtures using the assumptions in the 2016 version of CBECC. Page B-3
 
@@ -325,9 +326,9 @@ def Calculate_Fraction_HotWater(Temperature_Supply_WaterHeater, Data):
     Data['BooleanMask'] = Data['Fixture'] == 'DWSH' #Repeates the same process for the dishwasher
     Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * Fraction_HotWater_DishWasher
     Data['BooleanMask'] = Data['Fixture'] == 'BATH'
-    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Bath - Data['Mains Temperature (deg F)']) / (Temperature_Supply_WaterHeater  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a bath based on the CBECC-Res assumed temperature for baths and the mains water temperature
+    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Bath - Data['Mains Temperature (deg F)']) / (Temperature_Supply_Hot_AtFixture  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a bath based on the CBECC-Res assumed temperature for baths and the mains water temperature
     Data['BooleanMask'] = Data['Fixture'] == 'SHWR'
-    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Shower - Data['Mains Temperature (deg F)']) / (Temperature_Supply_WaterHeater  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a shower based on the CBECC-Res assumed temperature for showers and the mains water temperature
+    Data['Fraction Hot Water'] = Data['Fraction Hot Water'] + Data['BooleanMask'] * (Temperature_Shower - Data['Mains Temperature (deg F)']) / (Temperature_Supply_Hot_AtFixture  - Data['Mains Temperature (deg F)']) #Calculates the fraction of hot water in a shower based on the CBECC-Res assumed temperature for showers and the mains water temperature
 
     del Data['BooleanMask'] #Delete the BoolenaMask column because it adds no value beyond this function
 
