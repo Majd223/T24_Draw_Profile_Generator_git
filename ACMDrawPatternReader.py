@@ -14,15 +14,15 @@ for SF homes, so expect to need to update the Headers in the Flags section
 
 #%%--------------------FLAGS----------------
 
-Create_Annual_Profiles = 0
-Create_Daily_Profiles = 1
-Building_Type = 'Multi'
-Version = 2019
+Create_Annual_Profiles = 1
+Create_Daily_Profiles = 0
+Building_Type = 'Single'
+Version = 2016
 
 if Building_Type == 'Single':
     Building = 'SF'
     Row_Header_Annual_2016 = 12
-    Row_Header_Daily_2016 = 859
+    Row_Header_Daily_2016 = 104
     Row_Header_Annual_2019 = 47
     Row_Header_Daily_2019 = 859
 elif Building_Type == 'Multi':
@@ -58,7 +58,7 @@ if Create_Annual_Profiles == 1:
     
     if Version == 2016:
         if Building == 'SF':
-            Range = range(2,62)
+            Range = range(0,62)
         elif Building == 'MF':
             Range = range(0, 360)
     elif Version == 2019:
