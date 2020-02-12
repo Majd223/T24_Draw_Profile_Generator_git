@@ -71,9 +71,9 @@ end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 
 Building_Type = 'Single' #Either 'Single' for a single family or 'Multi' for a multi-family building
 SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
 Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
-NumberBedrooms_Dwellings = [5] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
-SquareFootage_Dwellings = [3500] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
-ClimateZone = 1 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
+NumberBedrooms_Dwellings = [3] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
+SquareFootage_Dwellings = [2100] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
+ClimateZone = 12 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 Version = 2019 #States the version of the T24 draw profile data set to use. Currently available options are 2016 and 2019
 Distribution_System_Type = 'Trunk and Branch' #Used to calculate the extra hot water flow caused by the hot water distribution system. Based on table B-1 in the ACM. Options are 'Trunk and Branch', 'Central Parallel Piping', 'Point of Use', 'Recirculation - Non-Demand Control', 'Recirculation with Manual Demand Control', 'Recirculation with Motion Sensor Demand Control', 'Pipe Insulation', 'Central Parallel Piping with 5 ft Maximum Length', 'Compact Design', 'Recirculation with Manual Demand Control - HERS', and 'Recirculation with Motion Sensor Demand Control - HERS'
 
@@ -297,13 +297,15 @@ def Modify_Profile_SDLM(Dwelling_Profile, SquareFootage_Dwelling, Water, Distrib
     #Creaes new columns that identify whether or not the duration of the draw gets modified by distribution loss multipliers. All draws except the clotheswasher and dishwaser get modified
     Dwelling_Profile['Isnt CWSH'] = Dwelling_Profile['Fixture'] != 'CWSH' #New column, TRUE if the fixture is NOT the clotheswasher
     Dwelling_Profile['Isnt DWSH'] = Dwelling_Profile['Fixture'] != 'DWSH' #New column, TRUE if the fixture is NOT the dishwasher
+#    Dwelling_Profile['Isnt FAUC'] = Dwelling_Profile['Fixture'] != 'FAUC' #New column, TRUE if the fixture is NOT the faucet
     Dwelling_Profile['Is CWSH'] = Dwelling_Profile['Fixture'] == 'CWSH' #New column, TRUE if the fixture IS The clotheswasher
     Dwelling_Profile['Is DWSH'] = Dwelling_Profile['Fixture'] == 'DWSH' #New column, TRUE if the fixture IS the dishwasher
+#    Dwelling_Profile['Is FAUC'] = Dwelling_Profile['Fixture'] == 'FAUC' #New column, TRUE if the fixture IS the faucet
 
-    Dwelling_Profile['Duration (min)'] = Dwelling_Profile['Duration (min)'] * (1 * Dwelling_Profile['Is CWSH'] + 1 * Dwelling_Profile['Is DWSH'] + Distribution_Loss_Multiplier * Dwelling_Profile['Isnt CWSH'] * Dwelling_Profile['Isnt DWSH']) #Multiply the duration by the loss multiplier if the draw is not the clothes washer or dishwasher. Multiply it by 1 if it is the clothes washer or dishwasher
+    Dwelling_Profile['Duration (min)'] = Dwelling_Profile['Duration (min)'] * ((Dwelling_Profile['Is CWSH'] + Dwelling_Profile['Is DWSH']) + Distribution_Loss_Multiplier * Dwelling_Profile['Isnt CWSH'] * Dwelling_Profile['Isnt DWSH']) #Multiply the duration by the loss multiplier if the draw is not the clothes washer, dish washer or faucet. Multiply it by 1 if it is the clothes washer or dishwasher
 
     if Water == 'Hot': #If the user wants to generate a hot water draw profile
-        Dwelling_Profile['Hot Water Volume (gal)'] = Dwelling_Profile['Hot Water Volume (gal)']  * (1 * Dwelling_Profile['Is CWSH'] + 1 * Dwelling_Profile['Is DWSH'] + Distribution_Loss_Multiplier * Dwelling_Profile['Isnt CWSH'] * Dwelling_Profile['Isnt DWSH']) #Also apply the the loss multipliers to the volume of the hot water draws
+        Dwelling_Profile['Hot Water Volume (gal)'] = Dwelling_Profile['Hot Water Volume (gal)']  * (1 * (Dwelling_Profile['Is CWSH'] + Dwelling_Profile['Is DWSH']) + Distribution_Loss_Multiplier * Dwelling_Profile['Isnt CWSH'] * Dwelling_Profile['Isnt DWSH']) #Also apply the the loss multipliers to the volume of the hot water draws if the draw is neither the clothes washer,  dish washer, or faucet
     
     #Remove the extra columns used in this function
     Dwelling_Profile = Dwelling_Profile.drop(columns=['Isnt CWSH', 'Isnt DWSH', 'Is CWSH', 'Is DWSH'])
