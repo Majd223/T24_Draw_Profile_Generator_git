@@ -71,11 +71,12 @@ end_laggard_hot, start_laggard_hot, end_laggard_mixed, start_laggard_mixed = 0, 
 Building_Type = 'Single' #Either 'Single' for a single family or 'Multi' for a multi-family building
 SDLM = 'Yes' #Either 'Yes' or 'No'. This flag determines whether or not the tool adds SDLM into the water flow calculations
 Water = 'Hot' #Either 'Mixed' or 'Hot'. Use 'Mixed' to retrieve the water exiting the fixture, having mixed both hot and cold streams. Use 'Hot' to retrieve only the hot water flow
-NumberBedrooms_Dwellings = [3] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
-SquareFootage_Dwellings = [2100] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
+NumberBedrooms_Dwellings = [5] #The number of bedrooms in each dwelling. Is a list because multi-family buildings need multiple specifications
+SquareFootage_Dwellings = [3500] #The square footage of each dwelling in the building. Is a list because multi-family buildings need multiple specifications
 ClimateZone = 12 #The CA climate zone used in the simulation. This must be entered as an integer (Not a string), and there must be an available weather data file for this climate zone in C:\Users\Peter Grant\Dropbox (Beyond Efficiency)\Peter\Python Scripts\Hot Water Draw Profiles\CBECC-Res\WeatherFiles
 Version = 2019 #States the version of the T24 draw profile data set to use. Currently available options are 2016 and 2019
 Distribution_System_Type = 'Trunk and Branch' #Used to calculate the extra hot water flow caused by the hot water distribution system. Based on table B-1 in the ACM. Options are 'Trunk and Branch', 'Central Parallel Piping', 'Point of Use', 'Recirculation - Non-Demand Control', 'Recirculation with Manual Demand Control', 'Recirculation with Motion Sensor Demand Control', 'Pipe Insulation', 'Central Parallel Piping with 5 ft Maximum Length', 'Compact Design', 'Recirculation with Manual Demand Control - HERS', and 'Recirculation with Motion Sensor Demand Control - HERS'
+Multiplier_Clotheswasher = 2.03 #Adds a multiplier to increase the volume of clotheswasher draws beyond what is in DHWDU.txt (The source data). As of Feb 19, 2019 this multiplier is 2.03 to account for the high prevalence of older, more water consuming clotheswashers
 
 #Describe the final profile format
 Combined = 'No' #Either 'Yes' or 'No'. If 'No', will print one file for each dwelling in the lists. If 'Yes', will combine the profiles for all dwellings into a single file
@@ -573,6 +574,14 @@ for i in range(len(NumberBedrooms_Dwellings)): #For each entry in the list Numbe
     elif Water == 'Mixed': #If the user is requesting mixed water flow exiting the fixture
         Dwelling_Profile, Included_Code = Create_Mixed_Profile_NoSDLM(Building_Type, NumberBedrooms_Dwellings[i], Variants[Variant], Include_Faucet, Include_Shower, Include_Clothes, Include_Dish, Include_Bath, Version) #Call the Create_Mixed_Profile_AtFixture function to create the draw profile for this dwelling. Note that this returns the mixed water profile without including SDLM
 
+    #Increases the duration of clotheswasher draws based on the Multiplier_Clotheswasher specified above to match CBECC calculations
+    Dwelling_Profile['BooleanMask'] = Dwelling_Profile['Fixture'] == 'CWSH' #Resets BooleanMask = True if Fixture in that row = CWSH
+    Dwelling_Profile['Duration (min)'] = Dwelling_Profile['Duration (min)'] + Dwelling_Profile['BooleanMask'] * Dwelling_Profile['Duration (min)'] * (Multiplier_Clotheswasher - 1)    
+    
+    if Water == 'Hot':
+        Dwelling_Profile['Hot Water Volume (gal)'] = Dwelling_Profile['Hot Water Volume (gal)'] + Dwelling_Profile['BooleanMask'] * Dwelling_Profile['Hot Water Volume (gal)'] * (Multiplier_Clotheswasher - 1)        
+    del Dwelling_Profile['BooleanMask'] #Delete the BooleanMask column because it is no longer useful
+    
     #Shorten the 'Included_Code' to reduce file path, make the draw profiles more user friendly. The end result is a series of letters stating the end uses included in the draw profile
     Included_Code = str(Included_Code) #Convert Included_Code from a list to a string
     Included_Code = Included_Code.replace("[", "") #Remove all [s from Included_Code
