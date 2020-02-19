@@ -73,13 +73,13 @@ start_time = time.time() # mark the beginning of the execution time for referenc
 #%%------------------------------INPUTS--------------------------------------
 #Folder paths - assumes the profile has been created and is in the appropriate folder
 #file to convert to a new climate zone:
-Folder = os.path.dirname(__file__)#The path to the folder where you have the base files for this script stored
+Folder = os.path.dirname(__file__) #The path to the folder where you have the base files for this script stored
 Folder_WeatherData = Folder + os.sep + 'WeatherFiles' #This states the folder that CBECC weather data files are stored in
 
 Possible_Climate_Zones = list(range(1,17)) # list of all possible climate zones
 New_Climate_Zones = list(range(1,17)) #specify which climate zones to convert the file to - can be a number from 1-16, must be a list
 #file to convert to a new climate zone:
-File = "Bldg=Multi_CZ=1_Wat=Hot_Prof=2j_SDLM=Yes_CFA=1080_Inc=['F', 'S', 'C', 'D', 'B']_Ver=2019.csv" # mjust use double-quotations since string has singles already
+File = "Bldg=Single_CZ=1_Wat=Hot_Prof=5_SDLM=Yes_CFA=3500_Inc=FSCDB_Ver=2019.csv" # mjust use double-quotations since string has singles already
 Split_Up = File.replace(".csv","").split(sep = '_')
 Specifier_Dict = {each.split(sep = "=")[0] : each.split(sep = "=")[1] for each in Split_Up}
 
@@ -92,7 +92,7 @@ ClimateZone = Specifier_Dict['CZ']
 # ClimateZone = 1 #for testing
 if ClimateZone in New_Climate_Zones: New_Climate_Zones.remove(ClimateZone) #remove the current climate zone from the list of new climate zones so we dont do an extra conversion.
 
-File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + Building_Type + os.sep + Water + os.sep + File #for normal use
+File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + File #for normal use
 # File_Location = Folder + os.sep + 'DrawProfiles' + os.sep + 'Unused Profiles' + os.sep + File #for testing
 Folder_Output = File_Location
 #%%-----------------------------ERROR CHECKING-------------------------------
