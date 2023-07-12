@@ -182,7 +182,7 @@ First_Hour = WeatherData[
     WeatherData["Hour"] == 1
 ]  # Creates a data frame containing only data from the first hour of each day in the weather file
 First_Hour = First_Hour.set_index(
-    [pd.Index(range(365))]
+    [pd.Index(range(365))]  # type: ignore
 )  # Sets the index of First_Hour to be the number of days in the year/number of entries in First_Hour
 
 T_Mains = (
@@ -330,9 +330,8 @@ def Create_Mixed_Profile_NoSDLM(
             Daily_Profile["Day of Year (Day)"] = (
                 i + 1
             )  # Add a new column stating the day of the year that this profile is representing
-            Dwelling_Profile = Dwelling_Profile.append(
-                Daily_Profile
-            )  # Add the data from Daily_Profiles corresponding to the current day in Annual_Profile (Represented by i) to Dwelling_Profile. This leads to Dwelling_Profile containing all draw data for that dwelling by adding the daily profiles from each day
+            # Add the data from Daily_Profiles corresponding to the current day in Annual_Profile (Represented by i) to Dwelling_Profile. This leads to Dwelling_Profile containing all draw data for that dwelling by adding the daily profiles from each day
+            Dwelling_Profile = pd.concat([Dwelling_Profile, Daily_Profile])
 
         Dwelling_Profile = (
             Dwelling_Profile.reset_index()
@@ -384,8 +383,8 @@ def Create_Mixed_Profile_NoSDLM(
             Daily_Profile["Day of Year (Day)"] = (
                 i + 1
             )  # Add a new column stating the day of the year that this profile is representing
-            Dwelling_Profile = Dwelling_Profile.append(
-                Daily_Profile
+            Dwelling_Profile = pd.concat(
+                [Dwelling_Profile, Daily_Profile]
             )  # Append the profile for this day into the annual profile for the dwelling
 
     Dwelling_Profile = (
@@ -534,8 +533,8 @@ def Create_Hot_Profile_NoSDLM(
             Daily_Profile["Day of Year (Day)"] = (
                 i + 1
             )  # Add a new column stating the day of the year that this profile is representing
-            Dwelling_Profile = Dwelling_Profile.append(
-                Daily_Profile
+            Dwelling_Profile = pd.concat(
+                [Dwelling_Profile, Daily_Profile]
             )  # Append the profile for the current day to the data frame for the annual draw profile
 
         # Dwelling_Profile = Calculate_Fraction_HotWater(Temperature_Supply_Hot_AtFixture, Temperature_Bath, Temperature_Shower, Dwelling_Profile) #Calculate the fraction of hot water for each draw in the draw profile
@@ -589,8 +588,8 @@ def Create_Hot_Profile_NoSDLM(
             Daily_Profile["Day of Year (Day)"] = (
                 i + 1
             )  # Add a new column stating the day of the year that this profile is representing
-            Dwelling_Profile = Dwelling_Profile.append(
-                Daily_Profile
+            Dwelling_Profile = pd.concat(
+                [Dwelling_Profile, Daily_Profile]
             )  # Append the profile for the current day to the data frame for the annual draw profile
 
     Dwelling_Profile = (
@@ -843,8 +842,8 @@ def Combine_Profiles(Profiles, Water):
             Combined_Profile.loc[i + 1, "Start Time of Year (hr)"]
             >= Combined_Profile.loc[i, "End Time of Year (hr)"]
         ):  # If the next draw begins after the current draw ends
-            Result_Profile = Result_Profile.append(
-                Combined_Profile.loc[i]
+            Result_Profile = pd.concat(
+                [Result_Profile, Combined_Profile.loc[i]]
             )  # Add the current draw to the Result_Profile
 
             Result_Profile = (
@@ -858,8 +857,8 @@ def Combine_Profiles(Profiles, Water):
             and Combined_Profile.loc[i + 1, "End Time of Year (hr)"]
             == Combined_Profile.loc[i, "End Time of Year (hr)"]
         ):  # IF the current draw and following draw both start and end at the same time
-            Result_Profile = Result_Profile.append(
-                Combined_Profile.loc[i]
+            Result_Profile = pd.concat(
+                [Result_Profile, Combined_Profile.loc[i]]
             )  # Add the draw to Result_Profile
 
             Result_Profile = (
@@ -923,8 +922,8 @@ def Combine_Profiles(Profiles, Water):
             and Combined_Profile.loc[i, "End Time of Year (hr)"]
             < Combined_Profile.loc[i + 1, "End Time of Year (hr)"]
         ):  # If the next draw starts before the current draw ends, and the current draw ends before the next draw ends
-            Result_Profile = Result_Profile.append(
-                Combined_Profile.loc[i]
+            Result_Profile = pd.concat(
+                [Result_Profile, Combined_Profile.loc[i]]
             )  # Add a new row in Result_Profile with the parameters of the current draw in Combined_Profile. This draw represents the period when the first draw is active before the second draw begins
 
             Result_Profile = (
@@ -942,8 +941,8 @@ def Combine_Profiles(Profiles, Water):
                 - Combined_Profile.loc[i, "Start Time of Year (hr)"]
             ) * 60  # Sets the duration of the next draw in Result_Profile to the time before the next draw in Combined_Profile starts
 
-            Result_Profile = Result_Profile.append(
-                Combined_Profile.loc[i + 1]
+            Result_Profile = pd.concat(
+                [Result_Profile, Combined_Profile.loc[i + 1]]
             )  # Adds a new draw in Result_Profile with the characteristics of the next draw in Combined_Profile. This draw represents the period when both draws are active
 
             Result_Profile = (
@@ -965,8 +964,8 @@ def Combine_Profiles(Profiles, Water):
                 + Combined_Profile.loc[i + 1, Column_Name]
             )  # Sets the water flow rate equal to the two draw flow rates combined
 
-            Result_Profile = Result_Profile.append(
-                Combined_Profile.loc[i + 1]
+            Result_Profile = pd.concat(
+                [Result_Profile, Combined_Profile.loc[i + 1]]
             )  # Create another row in Result_Profile. Use the information from the second draw b/c it holds the right flow rate and end time This draw represents the period when only the second draw is active
 
             Result_Profile = (
@@ -986,8 +985,8 @@ def Combine_Profiles(Profiles, Water):
 
             Skip = 1
 
-    Result_Profile = Result_Profile.append(
-        Combined_Profile.loc[Combined_Profile.index.max()]
+    Result_Profile = pd.concat(
+        [Result_Profile, Combined_Profile.loc[Combined_Profile.index.max()]]
     )
     Result_Profile = Result_Profile.reset_index()
     del Result_Profile["index"]
@@ -1032,31 +1031,36 @@ def Filter_DataSet_ByFixture(
     )  # Create a new dataframe for the output draw profile that has the same columns as the input draw profile
     if Include_Faucet == "Yes":  # If the user selects to include faucets
         Included_Code.append("F")  # Add 'F' to the list of included fixtures
-        Profile = Profile.append(
-            Dwelling_Profile[Dwelling_Profile["Fixture"] == "FAUC"]
-        )  # Select the data for faucet draws, add it to the profile
+        Profile = pd.concat(
+            [Profile, Dwelling_Profile[Dwelling_Profile["Fixture"] == "FAUC"]]
+        )
+        # Select the data for faucet draws, add it to the profile
     if Include_Shower == "Yes":  # If the user selects to incldue shower draws
         Included_Code.append("S")  # Add 'S' to the list of included fixtures
-        Profile = Profile.append(
-            Dwelling_Profile[Dwelling_Profile["Fixture"] == "SHWR"]
-        )  # Select the data for shower draws, add it to the profile
+        Profile = pd.concat(
+            [Profile, Dwelling_Profile[Dwelling_Profile["Fixture"] == "SHWR"]]
+        )
+        # Select the data for shower draws, add it to the profile
     if (
         Include_Clothes == "Yes"
     ):  # If the user selects that they want to include draws for clothes washers
         Included_Code.append("C")  # Add 'C' to the list of included fixtures
-        Profile = Profile.append(
-            Dwelling_Profile[Dwelling_Profile["Fixture"] == "CWSH"]
-        )  # Select the data for clothes washers, add it to the profile
+        Profile = pd.concat(
+            [Profile, Dwelling_Profile[Dwelling_Profile["Fixture"] == "CWSH"]]
+        )
+        # Select the data for clothes washers, add it to the profile
     if Include_Dish == "Yes":  # If the user selects to include dishwasher draws
         Included_Code.append("D")  # Add 'D' to the list of included fixtures
-        Profile = Profile.append(
-            Dwelling_Profile[Dwelling_Profile["Fixture"] == "DWSH"]
-        )  # Select the data for dishwashers, add it to the profile
+        Profile = pd.concat(
+            [Profile, Dwelling_Profile[Dwelling_Profile["Fixture"] == "DWSH"]]
+        )
+    # Select the data for dishwashers, add it to the profile
     if Include_Bath == "Yes":  # If the user selects to include bath draws
         Included_Code.append("B")  # Add 'B' to the list of included fixtures
-        Profile = Profile.append(
-            Dwelling_Profile[Dwelling_Profile["Fixture"] == "BATH"]
-        )  # Select the data for baths, add it to the profile
+        Profile = pd.concat(
+            [Profile, Dwelling_Profile[Dwelling_Profile["Fixture"] == "BATH"]]
+        )
+    # Select the data for baths, add it to the profile
 
     Profile = Profile.sort_values(
         "Start Time of Year (hr)"
@@ -1091,13 +1095,14 @@ def New_Draw_Beginning(
     if (
         len(Active_Draw_Indices) == 0
     ):  # If there are no active draws, merely append the next draw to the end of the profile
-        Active_Draw_Indices.append(
-            Next_Draw_Index
-        )  # Append the index of the draw to the list of active draws
+        Active_Draw_Indices = pd.concat([Active_Draw_Indices, Next_Draw_Index])
+        # Append the index of the draw to the list of active draws
 
-        Result_Profile = Result_Profile.append(
-            Combined_Profile.loc[Next_Draw_Index]
-        )  # Append the draw to the end of the draw profile
+        Result_Profile = pd.concat(
+            [Result_Profile, Combined_Profile.loc[Next_Draw_Index]]
+        )
+
+        # Append the draw to the end of the draw profile
         Result_Profile = Result_Profile.reset_index()  # Fix the index
         del Result_Profile["index"]
 
@@ -1106,8 +1111,8 @@ def New_Draw_Beginning(
         ] = 3  # State the type of the draw for debuggin purposes
 
     else:  # If there are other currently active draws, then add the new draw to the current draws
-        Active_Draw_Indices.append(
-            Next_Draw_Index
+        Active_Draw_Indices = pd.concat(
+            [Active_Draw_Indices, Next_Draw_Index]
         )  # Append the index of the draw to the list of active draws
         Result_Profile.loc[
             Result_Profile.index.max(), "End Time of Year (hr)"
@@ -1119,9 +1124,10 @@ def New_Draw_Beginning(
             - Result_Profile.loc[Result_Profile.index.max(), "Start Time of Year (hr)"]
         ) * 60.0  # Recalculate the duration of the last draw accordingly
 
-        Result_Profile = Result_Profile.append(
-            Combined_Profile.loc[Next_Draw_Index]
-        )  # Add a new line to the profile, representing the new draw
+        Result_Profile = pd.concat(
+            [Result_Profile, Combined_Profile.loc[Next_Draw_Index]]
+        )
+        # Add a new line to the profile, representing the new draw
         Result_Profile = Result_Profile.reset_index()  # Fix the index
         del Result_Profile["index"]
 
@@ -1166,9 +1172,11 @@ def Active_Draw_Ending(
     if (
         len(Active_Draw_Indices) > 0
     ):  # If there are still active draws (I.e. If the ending draw wasn't the only active draw)
-        Result_Profile = Result_Profile.append(
-            Combined_Profile.loc[Active_Draw_Indices[0]]
-        )  # Add a new row to Result_Profile containing the information of one active draw
+        Result_Profile = pd.concat(
+            [Result_Profile, Combined_Profile.loc[Active_Draw_Indices[0]]]
+        )
+
+        # Add a new row to Result_Profile containing the information of one active draw
         Result_Profile = Result_Profile.reset_index()  # Fix the index
         del Result_Profile["index"]
 
