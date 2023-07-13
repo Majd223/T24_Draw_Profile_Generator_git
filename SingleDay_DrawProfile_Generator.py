@@ -54,7 +54,12 @@ Temperature_Supply_Hot_AtFixture = 115  # deg F. CSE assumes 115 deg F hot water
 
 # %%--------------------LOAD WEATHER DATA----------------------------------
 
-
+# Read from WeatherFiles folder, depending on ClimateZone CTZ + climate zone + S13b.CSW
+# Read the weather data, ignoring the first 25 lines of header
+# Read 31-day avg lag DB
+# take the first hour of each day 
+# set index of first_hour to number of days
+# calculate T_Mains using equation 10, ACM, Appendix B
 def Calculate_TMains(ClimateZone):
     # Folder paths
     Folder = (

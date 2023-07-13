@@ -697,7 +697,7 @@ def Modify_Profile_SDLM(
         1 + (Standard_Distribution_Loss_Multiplier - 1) * Distribution_System_Multiplier
     )  # Combine the Distribution System Multiplier and Standard Distribution Loss Multiplier to get the Distribution Loss Multiplier per Eqn 5 of Appendix B in the ACM
 
-    # Creaes new columns that identify whether or not the duration of the draw gets modified by distribution loss multipliers. All draws except the clotheswasher and dishwaser get modified
+    # Creates new columns that identify whether or not the duration of the draw gets modified by distribution loss multipliers. All draws except the clotheswasher and dishwaser get modified
     Dwelling_Profile["Isnt CWSH"] = (
         Dwelling_Profile["Fixture"] != "CWSH"
     )  # New column, TRUE if the fixture is NOT the clotheswasher
