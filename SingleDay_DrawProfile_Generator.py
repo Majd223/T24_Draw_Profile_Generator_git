@@ -104,7 +104,7 @@ def Calculate_TMains(ClimateZone):
 
 def Create_Hot_Profiles(
     Building_Type,
-    Profile_List,
+    Profile_Type,
     ClimateZone,
     Include_Faucet,
     Include_Shower,
@@ -157,18 +157,17 @@ def Create_Hot_Profiles(
 
     Draw_Profiles = {}
 
-    for Day in Profile_List:
-        temp = Daily_Profiles[Daily_Profiles["Day"] == Day].reset_index(drop=True)
-        temp["Mains Temperature (deg F)"] = T_Mains[Day_Of_Year]
-        temp["Start Time of Year (hr)"] = temp["Start time (hr)"] + (24 * Day_Of_Year)
-        temp = Calculate_Fraction_HotWater(
-            Temperature_Supply_Hot_AtFixture, Temperature_Bath, Temperature_Shower, temp
-        )
-        temp = Calculate_FlowWater_Hot(temp)
-        temp = Modify_Profile_SDLM(
-            temp, SquareFootage_Dwelling, Water, Distribution_System_Type
-        )
-        Draw_Profiles[Day] = temp
+    temp = Daily_Profiles[Daily_Profiles["Day"] == Profile_Type].reset_index(drop=True)
+    temp["Mains Temperature (deg F)"] = T_Mains[Day_Of_Year]
+    temp["Start Time of Year (hr)"] = temp["Start time (hr)"] + (24 * Day_Of_Year)
+    temp = Calculate_Fraction_HotWater(
+        Temperature_Supply_Hot_AtFixture, Temperature_Bath, Temperature_Shower, temp
+    )
+    temp = Calculate_FlowWater_Hot(temp)
+    temp = Modify_Profile_SDLM(
+        temp, SquareFootage_Dwelling, Water, Distribution_System_Type
+    )
+    Draw_Profiles[Profile_Type] = temp
 
     return Draw_Profiles
 
